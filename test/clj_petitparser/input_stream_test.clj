@@ -1,4 +1,5 @@
 (ns clj-petitparser.input-stream-test
+  (:refer-clojure :exclude [peek])
   (:require [clojure.test :refer :all]
             [clj-petitparser.input-stream :refer :all]))
 
