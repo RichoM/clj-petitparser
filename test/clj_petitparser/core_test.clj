@@ -20,7 +20,15 @@
                           #"Literal '\w+' expected"
                           (parse pp "abd")))))
 
+(deftest foo
+  (let [pp (as-parser [\a \b \c])]
+    (is (= [\a \b \c] (parse pp "abc")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Literal '\w+' expected"
+                          (parse pp "abd")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
+ (= (seq [\a \b \c]) [\a \b \c])
  ,)

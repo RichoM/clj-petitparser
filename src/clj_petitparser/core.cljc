@@ -51,6 +51,18 @@
                   (in/reset-position! stream position)
                   fail)))))
 
+(deftype SequenceParser [parsers]
+  Parser
+  (parse-on [self stream]
+            (let [position (in/position stream)
+                  elements (map #(parse-on % stream)
+                              parsers)]
+              (if (every? is-success? elements)
+                (success (mapv actual-result elements))
+                (do
+                  (in/reset-position! stream position)
+                  (first (filter is-failure? elements)))))))
+
 (defprotocol ParserBuilder (as-parser [self]))
 
 (extend-type java.lang.Character
@@ -61,6 +73,10 @@
   ParserBuilder
   (as-parser [str] (LiteralSequenceParser. str (count str))))
 
+(extend-type java.util.List
+  ParserBuilder
+  (as-parser [parsers] (SequenceParser. (mapv as-parser parsers))))
+
 
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
@@ -69,6 +85,9 @@
  (require '[clj-petitparser.input-stream :as in])
  (class \a)
  (class "Richo")
+ (ancestors (type (seq [1 2 3])))
+ clojure.lang.ISeq
+
 
  (def stream (in/make-stream "Richo capo"))
  (def parser (as-parser \a))
@@ -79,7 +98,7 @@
 
  (apply format "%s at %d" ["Richo expected" 1])
 
-
+ (parse (as-parser [\a \b \c]) "abd")
 
 
 
