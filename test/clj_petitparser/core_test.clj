@@ -13,6 +13,13 @@
                           #"Literal '\w' expected"
                           (parse pp "b")))))
 
+(deftest literal-sequence-parser
+  (let [pp (as-parser "abc")]
+    (is (= "abc" (parse pp "abc")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Literal '\w+' expected"
+                          (parse pp "abd")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")

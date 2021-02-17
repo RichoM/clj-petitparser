@@ -39,11 +39,27 @@
               (failure (in/position stream)
                        (str "Literal '" literal "' expected")))))
 
+(deftype LiteralSequenceParser [literal count]
+  Parser
+  (parse-on [self stream]
+            (let [position (in/position stream)
+                  result (in/take! stream count)]
+              (if (= literal result)
+                (success result)
+                (let [fail (failure (in/position stream)
+                                    (str "Literal '" literal "' expected"))]
+                  (in/reset-position! stream position)
+                  fail)))))
+
 (defprotocol ParserBuilder (as-parser [self]))
 
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
+
+(extend-type java.lang.String
+  ParserBuilder
+  (as-parser [str] (LiteralSequenceParser. str (count str))))
 
 
 (defn parse [parser src]
@@ -52,6 +68,7 @@
 (comment
  (require '[clj-petitparser.input-stream :as in])
  (class \a)
+ (class "Richo")
 
  (def stream (in/make-stream "Richo capo"))
  (def parser (as-parser \a))
