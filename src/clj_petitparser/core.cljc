@@ -97,6 +97,16 @@
                                (- (in/position stream)
                                   start)))))))
 
+(deftype AndParser [parser]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                  result (parse-on parser stream)]
+              (in/reset-position! stream start)
+              result)))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -111,6 +121,9 @@
 
 (defn or [& parsers]
   (ChoiceParser. (mapv as-parser parsers)))
+
+(defn and [parser]
+  (AndParser. (as-parser parser)))
 
 (defn flatten [parser]
   (FlattenParser. (as-parser parser)))

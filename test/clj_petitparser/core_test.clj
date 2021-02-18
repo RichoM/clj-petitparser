@@ -1,6 +1,7 @@
 (ns clj-petitparser.core-test
   (:require [clojure.test :refer :all]
-            [clj-petitparser.core :as pp]))
+            [clj-petitparser.core :as pp]
+            [clj-petitparser.input-stream :as in]))
 
 (deftest a-test
   (testing "FIXME, I fail."
@@ -40,6 +41,13 @@
                         (pp/or "_" " " "-" "/")
                         (pp/or "hambriento" "cansado" "feliz")])]
     (is (= "gato feliz" (pp/parse pp "gato feliz!!!")))))
+
+(deftest and-parser
+  (let [pp (pp/as-parser ["foo" (pp/and "bar")])
+        stream (in/make-stream "foobar")
+        result (pp/actual-result (pp/parse-on pp stream))]
+    (is (= ["foo" "bar"] result))
+    (is (= 3 (in/position stream)))))
 
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
