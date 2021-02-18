@@ -20,7 +20,7 @@
                           #"Literal '\w+' expected"
                           (parse pp "abd")))))
 
-(deftest foo
+(deftest sequence-parser
   (let [pp (as-parser [\a \b \c])]
     (is (= [\a \b \c] (parse pp "abc")))
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
