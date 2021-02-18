@@ -1,5 +1,5 @@
 (ns clj-petitparser.core
-  (:refer-clojure :exclude [or])
+  (:refer-clojure :exclude [or flatten])
   (:require [clj-petitparser.input-stream :as in]))
 
 (defprotocol ParserBuilder (as-parser [self]))
@@ -89,7 +89,7 @@
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
-                   result (parse-on parser stream)]
+                  result (parse-on parser stream)]
               (if (is-failure? result)
                 result
                 (success (subs (in/source stream)

@@ -4,7 +4,7 @@
 (defn make-stream [src]
   {:src src :pos (atom 0)})
 
-(defn position [{pos :pos}] @pos)
+(defn position ^long [{pos :pos}] @pos)
 (defn source [stream] (:src stream))
 
 (defn reset-position! [stream pos]
@@ -22,7 +22,7 @@
 (defn end? [stream]
   (nil? (peek stream)))
 
-(defn take-seq [stream count]
+(defn take-seq [stream ^long count]
   (lazy-seq
    (if-not (or (= 0 count)
                (end? stream))
