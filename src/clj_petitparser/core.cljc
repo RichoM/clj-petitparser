@@ -1,6 +1,10 @@
 (ns clj-petitparser.core
   (:require [clj-petitparser.input-stream :as in]))
 
+(defprotocol ParserBuilder (as-parser [self]))
+
+(defprotocol Parser (parse-on [self stream]))
+
 (defprotocol ParseResult
   (is-success? [self])
   (is-failure? [self])
@@ -27,11 +31,11 @@
   ([position message & args]
    (failure position (apply format message args)))
   ([position message]
-    (ParseFailure. position message)))
-
-(defprotocol Parser (parse-on [self stream]))
+   (ParseFailure. position message)))
 
 (deftype LiteralObjectParser [literal]
+  ParserBuilder
+  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (if (= literal (in/peek stream))
@@ -40,18 +44,22 @@
                        (str "Literal '" literal "' expected")))))
 
 (deftype LiteralSequenceParser [literal count]
+  ParserBuilder
+  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
                   result (in/take! stream count)]
               (if (= literal result)
                 (success result)
-                (let [fail (failure (in/position stream)
-                                    (str "Literal '" literal "' expected"))]
+                (do
                   (in/reset-position! stream position)
-                  fail)))))
+                  (failure position
+                           (str "Literal '" literal "' expected")))))))
 
 (deftype SequenceParser [parsers]
+  ParserBuilder
+  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
@@ -62,8 +70,6 @@
                 (do
                   (in/reset-position! stream position)
                   (first (filter is-failure? elements)))))))
-
-(defprotocol ParserBuilder (as-parser [self]))
 
 (extend-type java.lang.Character
   ParserBuilder
@@ -98,9 +104,11 @@
 
  (apply format "%s at %d" ["Richo expected" 1])
 
+ (parse (as-parser ["richo" "capo"]) "richocapo")
+
  (parse (as-parser [\a \b \c]) "abd")
 
-
+ (ancestors (type (as-parser "richo")))
 
 
  ,)
