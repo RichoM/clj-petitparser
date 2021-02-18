@@ -1,4 +1,5 @@
 (ns clj-petitparser.core
+  (:refer-clojure :exclude [or])
   (:require [clj-petitparser.input-stream :as in]))
 
 (defprotocol ParserBuilder (as-parser [self]))
@@ -71,6 +72,17 @@
                   (in/reset-position! stream position)
                   (first (filter is-failure? elements)))))))
 
+(deftype ChoiceParser [parsers]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [results (map #(parse-on % stream)
+                               parsers)]
+              (if (every? is-failure? results)
+                (last results)
+                (first (filter is-success? results))))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -83,6 +95,8 @@
   ParserBuilder
   (as-parser [parsers] (SequenceParser. (mapv as-parser parsers))))
 
+(defn or [& parsers]
+  (ChoiceParser. (mapv as-parser parsers)))
 
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
@@ -96,7 +110,15 @@
 
 
  (def stream (in/make-stream "Richo capo"))
- (def parser (as-parser \a))
+ (def parser (as-parser [(or "perro"
+                             "gato"
+                             "león")
+                         " "
+                         (or "hambriento"
+                             "cansado"
+                             "feliz")]))
+
+ (parse parser "gato feliz")
 
  (parse parser "a")
 

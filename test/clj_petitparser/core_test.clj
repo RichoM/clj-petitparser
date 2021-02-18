@@ -1,31 +1,39 @@
 (ns clj-petitparser.core-test
   (:require [clojure.test :refer :all]
-            [clj-petitparser.core :refer :all]))
+            [clj-petitparser.core :as pp]))
 
 (deftest a-test
   (testing "FIXME, I fail."
     (is (= 0 0))))
 
 (deftest literal-object-parser
-  (let [pp (as-parser \a)]
-    (is (= \a (parse pp "a")))
+  (let [pp (pp/as-parser \a)]
+    (is (= \a (pp/parse pp "a")))
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Literal '\w' expected"
-                          (parse pp "b")))))
+                          (pp/parse pp "b")))))
 
 (deftest literal-sequence-parser
-  (let [pp (as-parser "abc")]
-    (is (= "abc" (parse pp "abc")))
+  (let [pp (pp/as-parser "abc")]
+    (is (= "abc" (pp/parse pp "abc")))
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Literal '\w+' expected"
-                          (parse pp "abd")))))
+                          (pp/parse pp "abd")))))
 
 (deftest sequence-parser
-  (let [pp (as-parser [\a \b \c])]
-    (is (= [\a \b \c] (parse pp "abc")))
+  (let [pp (pp/as-parser [\a \b \c])]
+    (is (= [\a \b \c] (pp/parse pp "abc")))
     (is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Literal '\w+' expected"
-                          (parse pp "abd")))))
+                          (pp/parse pp "abd")))))
+
+(deftest choice-parser
+  (let [pp (pp/or "perro"
+                  "gato")]
+    (is (= "perro" (pp/parse pp "perro")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Literal '\w+' expected"
+                          (pp/parse pp "ratón")))))
 
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
