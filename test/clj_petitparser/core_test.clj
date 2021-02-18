@@ -61,6 +61,36 @@
     (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
     (is (empty? (pp/parse pp "")))))
 
+(deftest repeating-parser-plus
+  (let [pp (pp/plus "foo")]
+    (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Literal '\w+' expected"
+                          (pp/parse pp "bar")))))
+
+(deftest repeating-parser-times
+  (let [pp (pp/times "foo" 3)]
+    (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Literal '\w+' expected"
+                          (pp/parse pp "foofoo")))))
+
+(deftest repeating-parser-min
+  (let [pp (pp/end (pp/min "foo" 3))]
+    (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
+    (is (= ["foo" "foo" "foo" "foo"] (pp/parse pp "foofoofoofoo")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Literal '\w+' expected"
+                          (pp/parse pp "foofoo")))))
+
+(deftest repeating-parser-max
+  (let [pp (pp/end (pp/max "foo" 3))]
+    (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
+    (is (= ["foo" "foo"] (pp/parse pp "foofoo")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"End of input expected"
+                          (pp/parse pp "foofoofoofoo")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")

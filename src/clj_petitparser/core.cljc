@@ -178,6 +178,18 @@
 (defn star [parser]
   (RepeatingParser. (as-parser parser) 0 Integer/MAX_VALUE))
 
+(defn plus [parser]
+  (RepeatingParser. (as-parser parser) 1 Integer/MAX_VALUE))
+
+(defn times [parser n]
+  (RepeatingParser. (as-parser parser) n n))
+
+(defn min [parser n]
+  (RepeatingParser. (as-parser parser) n Integer/MAX_VALUE))
+
+(defn max [parser n]
+  (RepeatingParser. (as-parser parser) 0 n))
+
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
 
