@@ -1,6 +1,7 @@
 (ns clj-petitparser.core
   (:refer-clojure :exclude [or flatten])
-  (:require [clj-petitparser.input-stream :as in]))
+  (:require [clojure.core :as clj]
+            [clj-petitparser.input-stream :as in]))
 
 (defprotocol ParserBuilder (as-parser [self]))
 
@@ -107,6 +108,21 @@
               (in/reset-position! stream start)
               result)))
 
+(deftype EndParser [parser]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                  result (parse-on parser stream)]
+              (if (clj/or (is-failure? result)
+                          (in/end? stream))
+                result
+                (let [fail (failure (in/position stream)
+                                    "End of input expected")]
+                  (in/reset-position! stream start)
+                  fail)))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -127,6 +143,9 @@
 
 (defn flatten [parser]
   (FlattenParser. (as-parser parser)))
+
+(defn end [parser]
+  (EndParser. (as-parser parser)))
 
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
@@ -150,7 +169,8 @@
 
  (parse parser "gato feliz")
 
- (parse parser "a")
+ (parse (end ["foo"
+              "bar"]) "foobarbaz")
 
 
 

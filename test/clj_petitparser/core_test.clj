@@ -49,6 +49,13 @@
     (is (= ["foo" "bar"] result))
     (is (= 3 (in/position stream)))))
 
+(deftest end-parser
+  (let [pp (pp/end "foo")]
+  (is (= "foo" (pp/parse pp "foo")))
+  (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                        #"End of input expected"
+                        (pp/parse pp "foobar")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
