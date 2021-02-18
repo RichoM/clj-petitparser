@@ -35,6 +35,12 @@
                           #"Literal '\w+' expected"
                           (pp/parse pp "ratón")))))
 
+(deftest flatten-parser
+  (let [pp (pp/flatten [(pp/or "perro" "gato" "león")
+                        (pp/or "_" " " "-" "/")
+                        (pp/or "hambriento" "cansado" "feliz")])]
+    (is (= "gato feliz" (pp/parse pp "gato feliz!!!")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")

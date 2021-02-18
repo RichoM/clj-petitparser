@@ -83,6 +83,20 @@
                 (last results)
                 (first (filter is-success? results))))))
 
+(deftype FlattenParser [parser]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                   result (parse-on parser stream)]
+              (if (is-failure? result)
+                result
+                (success (subs (in/source stream)
+                               start
+                               (- (in/position stream)
+                                  start)))))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -97,6 +111,9 @@
 
 (defn or [& parsers]
   (ChoiceParser. (mapv as-parser parsers)))
+
+(defn flatten [parser]
+  (FlattenParser. (as-parser parser)))
 
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
