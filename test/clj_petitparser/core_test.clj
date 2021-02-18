@@ -51,10 +51,15 @@
 
 (deftest end-parser
   (let [pp (pp/end "foo")]
-  (is (= "foo" (pp/parse pp "foo")))
-  (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                        #"End of input expected"
-                        (pp/parse pp "foobar")))))
+    (is (= "foo" (pp/parse pp "foo")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"End of input expected"
+                          (pp/parse pp "foobar")))))
+
+(deftest repeating-parser-star
+  (let [pp (pp/star "foo")]
+    (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
+    (is (empty? (pp/parse pp "")))))
 
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")

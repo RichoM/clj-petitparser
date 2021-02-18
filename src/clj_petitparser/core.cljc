@@ -123,6 +123,34 @@
                   (in/reset-position! stream start)
                   fail)))))
 
+(deftype RepeatingParser [parser ^long min ^long max]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                   elements (atom [])
+                   failure (atom nil)]
+              (loop [count 0]
+                (when (< count min)
+                  (let [result (parse-on parser stream)]
+                    (if (is-success? result)
+                      (do
+                        (swap! elements conj (actual-result result))
+                        (recur (inc count)))
+                      (do
+                        (in/reset-position! stream start)
+                        (reset! failure result))))))
+              (if @failure
+                @failure
+                (do (loop [count 0]
+                      (when (< count max)
+                        (let [result (parse-on parser stream)]
+                          (when (is-success? result)
+                            (swap! elements conj (actual-result result))
+                            (recur (inc count))))))
+                  (success @elements))))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -147,6 +175,9 @@
 (defn end [parser]
   (EndParser. (as-parser parser)))
 
+(defn star [parser]
+  (RepeatingParser. (as-parser parser) 0 Integer/MAX_VALUE))
+
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
 
@@ -167,12 +198,14 @@
                              "cansado"
                              "feliz")]))
 
+ (class (repeatedly 11 (fn [] (in/next! stream))))
+
  (parse parser "gato feliz")
 
- (parse (end ["foo"
-              "bar"]) "foobarbaz")
+ (parse (star "foo") "foofoofoo")
 
 
+ Integer/MAX_VALUE
 
  (apply format "%s at %d" ["Richo expected" 1])
 
@@ -181,6 +214,45 @@
  (parse (as-parser [\a \b \c]) "abd")
 
  (ancestors (type (as-parser "richo")))
+
+ (parse-on (RepeatingParser. (as-parser "foo") 4 Integer/MAX_VALUE)
+           (in/make-stream "foofoobarfoo"))
+
+ (do
+   (def parser (as-parser "a"))
+   (def stream (in/make-stream "aaaaab"))
+   (def results (repeatedly #(parse-on parser stream))))
+
+ (mapv actual-result (take-while is-success? results))
+ (.position (first (drop-while is-success? results)))
+ (in/end? stream)
+ (in/position stream)
+ (in/peek stream)
+ (realized? results)
+ (vec results)
+
+
+
+
+
+ (def elements (atom []))
+ (time (dotimes [i 100000]
+                (swap! elements conj i)))
+ @elements
+
+
+ (def elements (atom (transient [])))
+ (time (dotimes [i 100000]
+                (swap! elements conj! i)))
+ (persistent! @elements)
+
+
+
+
+
+
+
+
 
 
  ,)
