@@ -1,4 +1,4 @@
-(ns clj-petitparser.token)
+(ns petitparser.token)
 
 (defn make-token [source start count value]
   {:source source

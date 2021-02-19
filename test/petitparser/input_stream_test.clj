@@ -1,7 +1,7 @@
-(ns clj-petitparser.input-stream-test
+(ns petitparser.input-stream-test
   (:refer-clojure :exclude [peek])
   (:require [clojure.test :refer :all]
-            [clj-petitparser.input-stream :refer :all]))
+            [petitparser.input-stream :refer :all]))
 
 (deftest next!-increments-position
   (let [stream (make-stream "abc")]

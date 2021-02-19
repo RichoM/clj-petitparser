@@ -1,9 +1,9 @@
-(ns clj-petitparser.core-test
+(ns petitparser.core-test
   (:require [clojure.test :refer :all]
             [clojure.string :as str]
-            [clj-petitparser.core :as pp]
-            [clj-petitparser.input-stream :as in]
-            [clj-petitparser.token :as t]))
+            [petitparser.core :as pp]
+            [petitparser.input-stream :as in]
+            [petitparser.token :as t]))
 
 (deftest a-test
   (testing "FIXME, I fail."

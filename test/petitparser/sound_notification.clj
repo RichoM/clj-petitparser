@@ -1,4 +1,4 @@
-(ns clj-petitparser.sound-notification
+(ns petitparser.sound-notification
   (:require [clojure.test :refer :all]
             [clj-audio.core :refer :all]
             [clojure.java.io :as io]

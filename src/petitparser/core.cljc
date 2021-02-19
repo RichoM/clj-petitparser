@@ -1,8 +1,8 @@
-(ns clj-petitparser.core
+(ns petitparser.core
   (:refer-clojure :exclude [or flatten and min max not])
   (:require [clojure.core :as clj]
-            [clj-petitparser.input-stream :as in]
-            [clj-petitparser.token :as t]))
+            [petitparser.input-stream :as in]
+            [petitparser.token :as t]))
 
 (defprotocol ParserBuilder (as-parser [self]))
 

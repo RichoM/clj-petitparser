@@ -1,4 +1,4 @@
-(ns clj-petitparser.input-stream
+(ns petitparser.input-stream
   (:refer-clojure :exclude [peek]))
 
 (defn make-stream [src]
