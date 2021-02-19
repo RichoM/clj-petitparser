@@ -15,4 +15,4 @@
   (+ start count))
 
 (defn input-value [{:keys [source start count]}]
-  (subs source start count))
+  (subs source start (+ start count)))
