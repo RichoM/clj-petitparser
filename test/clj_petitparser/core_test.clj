@@ -120,19 +120,19 @@
     (is (= "foo" (t/input-value token)))))
 
 (deftest action-parser-with-one-arg
-  (let [pp (pp/map (fn [token] (str/upper-case (t/input-value token)))
-                   (pp/token "foo"))]
+  (let [pp (pp/transform (pp/token "foo")
+                         (fn [token] (str/upper-case (t/input-value token))))]
     (is (= "FOO" (pp/parse pp "foo")))))
 
 (deftest action-parser-with-n-args
-  (let [pp (pp/map (fn [[t1 t2 t3]]
-                     (format "%s -> %s -> %s"
-                             (t/input-value t1)
-                             (t/input-value t2)
-                             (t/input-value t3)))
-                   [(pp/token "foo")
-                    (pp/token "bar")
-                    (pp/token "baz")])]
+  (let [pp (pp/transform [(pp/token "foo")
+                          (pp/token "bar")
+                          (pp/token "baz")]
+                         (fn [[t1 t2 t3]]
+                           (format "%s -> %s -> %s"
+                                   (t/input-value t1)
+                                   (t/input-value t2)
+                                   (t/input-value t3))))]
     (is (= "foo -> bar -> baz" (pp/parse pp "foobarbaz")))))
 
 (comment

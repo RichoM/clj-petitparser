@@ -1,5 +1,5 @@
 (ns clj-petitparser.core
-  (:refer-clojure :exclude [or flatten and min max not map])
+  (:refer-clojure :exclude [or flatten and min max not])
   (:require [clojure.core :as clj]
             [clj-petitparser.input-stream :as in]
             [clj-petitparser.token :as t]))
@@ -66,7 +66,7 @@
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
-                  elements (clj/map #(parse-on % stream)
+                  elements (map #(parse-on % stream)
                               parsers)]
               (if (every? is-success? elements)
                 (success (mapv actual-result elements))
@@ -79,7 +79,7 @@
   (as-parser [self] self)
   Parser
   (parse-on [self stream]
-            (let [results (clj/map #(parse-on % stream)
+            (let [results (map #(parse-on % stream)
                                parsers)]
               (if (every? is-failure? results)
                 (last results)
@@ -247,28 +247,11 @@
 (defn token [parser]
   (TokenParser. (as-parser parser)))
 
-(defn map [function parser]
+(defn transform [parser function]
   (ActionParser. (as-parser parser) function))
 
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
 
 (comment
-
- (def parser (map (fn [[t1 t2 t3]]
-                       (format "%s -> %s -> %s"
-                               (t/input-value t1)
-                               (t/input-value t2)
-                               (t/input-value t3)))
-                     [(token "foo")
-                      (token "bar")
-                      (token "baz")]))
-
- (def parser (as-parser
-                  [(token "foo")
-                   (token "bar")
-                   (token "baz")]))
-parser
- (def result (parse parser "foobarbaz"))
- (t/input-value (second result))
  ,)
