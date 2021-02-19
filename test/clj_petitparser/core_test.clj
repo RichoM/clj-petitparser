@@ -104,6 +104,11 @@
         result (pp/parse-on pp stream)]
     (is (zero? (in/position stream)))))
 
+(deftest optional-parser
+  (let [pp (pp/optional "foo")]
+    (is (= "foo" (pp/parse pp "foo")))
+    (is (nil? (pp/parse pp "bar")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")

@@ -163,6 +163,16 @@
                 (failure (in/position stream) "")
                 (success nil)))))
 
+(deftype OptionalParser [parser]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [result (parse-on parser stream)]
+              (if (is-success? result)
+                result
+                (success nil)))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -204,6 +214,9 @@
 
 (defn not [parser]
   (NotParser. (as-parser parser)))
+
+(defn optional [parser]
+  (OptionalParser. (as-parser parser)))
 
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
