@@ -263,6 +263,17 @@
 (defn predicate [function message]
   (PredicateParser. function message))
 
+(defn- digit? [^Character chr] (Character/isDigit chr))
+(defn- letter? [^Character chr] (Character/isLetter chr))
+(defn- letter-or-digit? [^Character chr] (Character/isLetterOrDigit chr))
+(defn- whitespace? [^Character chr] (Character/isWhitespace chr))
+
+(def any (predicate (constantly true) "Input expected"))
+(def digit (predicate digit? "Digit expected"))
+(def letter (predicate letter? "Letter expected"))
+(def word (predicate letter-or-digit? "Letter or digit expected"))
+(def space (predicate whitespace? "White space expected"))
+
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
 

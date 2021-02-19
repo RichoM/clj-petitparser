@@ -146,4 +146,5 @@
  (re-find #"Literal '" "Literal 'a' expected")
  (= (seq [\a \b \c]) [\a \b \c])
  (str/index-of "Richo" \a)
+
  ,)
