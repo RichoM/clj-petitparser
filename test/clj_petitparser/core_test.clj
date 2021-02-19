@@ -135,8 +135,15 @@
                                    (t/input-value t3))))]
     (is (= "foo -> bar -> baz" (pp/parse pp "foobarbaz")))))
 
+(deftest predicate-parser
+  (let [pp (pp/predicate (fn [chr] (some? (str/index-of "aeiouAEIOU" chr)))
+                         "Vowel expected")]
+    (is (pp/matches? pp "a"))
+    (is (not (pp/matches? pp "b")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
  (= (seq [\a \b \c]) [\a \b \c])
+ (str/index-of "Richo" \a)
  ,)

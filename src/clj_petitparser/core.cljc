@@ -199,6 +199,16 @@
                 result
                 (success (function (actual-result result)))))))
 
+(deftype PredicateParser [function message]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (if (clj/and (clj/not (in/end? stream))
+                         (function (in/peek stream)))
+              (success (in/next! stream))
+              (failure (in/position stream) message))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -250,8 +260,14 @@
 (defn transform [parser function]
   (ActionParser. (as-parser parser) function))
 
+(defn predicate [function message]
+  (PredicateParser. function message))
+
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
+
+(defn matches? [parser src]
+  (success? (parse-on parser (in/make-stream src))))
 
 (comment
  ,)
