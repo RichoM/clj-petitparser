@@ -55,8 +55,7 @@
                 result
                 (success (subs (in/source stream)
                                start
-                               (- (in/position stream)
-                                  start)))))))
+                               (in/position stream)))))))
 
 (deftype AndParser [parser]
   Parser
