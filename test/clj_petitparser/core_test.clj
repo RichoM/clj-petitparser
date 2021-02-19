@@ -1,5 +1,6 @@
 (ns clj-petitparser.core-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as str]
             [clj-petitparser.core :as pp]
             [clj-petitparser.input-stream :as in]
             [clj-petitparser.token :as t]))
@@ -117,6 +118,22 @@
     (is (= 3 (t/count token)))
     (is (= "foo" (t/parsed-value token)))
     (is (= "foo" (t/input-value token)))))
+
+(deftest action-parser-with-one-arg
+  (let [pp (pp/map (fn [token] (str/upper-case (t/input-value token)))
+                   (pp/token "foo"))]
+    (is (= "FOO" (pp/parse pp "foo")))))
+
+(deftest action-parser-with-n-args
+  (let [pp (pp/map (fn [[t1 t2 t3]]
+                     (format "%s -> %s -> %s"
+                             (t/input-value t1)
+                             (t/input-value t2)
+                             (t/input-value t3)))
+                   [(pp/token "foo")
+                    (pp/token "bar")
+                    (pp/token "baz")])]
+    (is (= "foo -> bar -> baz" (pp/parse pp "foobarbaz")))))
 
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")

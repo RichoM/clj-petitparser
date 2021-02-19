@@ -1,5 +1,5 @@
 (ns clj-petitparser.core
-  (:refer-clojure :exclude [or flatten])
+  (:refer-clojure :exclude [or flatten and min max not map])
   (:require [clojure.core :as clj]
             [clj-petitparser.input-stream :as in]
             [clj-petitparser.token :as t]))
@@ -66,7 +66,7 @@
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
-                  elements (map #(parse-on % stream)
+                  elements (clj/map #(parse-on % stream)
                               parsers)]
               (if (every? is-success? elements)
                 (success (mapv actual-result elements))
@@ -79,7 +79,7 @@
   (as-parser [self] self)
   Parser
   (parse-on [self stream]
-            (let [results (map #(parse-on % stream)
+            (let [results (clj/map #(parse-on % stream)
                                parsers)]
               (if (every? is-failure? results)
                 (last results)
@@ -189,6 +189,16 @@
                                           (actual-result result))]
                   (success token))))))
 
+(deftype ActionParser [parser function]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [result (parse-on parser stream)]
+              (if (is-failure? result)
+                result
+                (success (function (actual-result result)))))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -237,8 +247,28 @@
 (defn token [parser]
   (TokenParser. (as-parser parser)))
 
+(defn map [function parser]
+  (ActionParser. (as-parser parser) function))
+
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
 
 (comment
+
+ (def parser (map (fn [[t1 t2 t3]]
+                       (format "%s -> %s -> %s"
+                               (t/input-value t1)
+                               (t/input-value t2)
+                               (t/input-value t3)))
+                     [(token "foo")
+                      (token "bar")
+                      (token "baz")]))
+
+ (def parser (as-parser
+                  [(token "foo")
+                   (token "bar")
+                   (token "baz")]))
+parser
+ (def result (parse parser "foobarbaz"))
+ (t/input-value (second result))
  ,)
