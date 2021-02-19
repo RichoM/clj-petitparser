@@ -151,6 +151,18 @@
                             (recur (inc count))))))
                   (success @elements))))))
 
+(deftype NotParser [parser]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                  result (parse-on parser stream)]
+              (in/reset-position! stream start)
+              (if (is-success? result)
+                (failure (in/position stream) "")
+                (success nil)))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -189,6 +201,9 @@
 
 (defn max [parser n]
   (RepeatingParser. (as-parser parser) 0 n))
+
+(defn not [parser]
+  (NotParser. (as-parser parser)))
 
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))

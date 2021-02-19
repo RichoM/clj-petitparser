@@ -91,6 +91,19 @@
                           #"End of input expected"
                           (pp/parse pp "foofoofoofoo")))))
 
+(deftest not-parser
+  (let [pp (pp/not \a)]
+    (is (nil? (pp/parse pp "b")))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #".+"
+                          (pp/parse pp "a")))))
+
+(deftest not-parser-does-not-consume-the-stream
+  (let [stream (in/make-stream "b")
+        pp (pp/not \a)
+        result (pp/parse-on pp stream)]
+    (is (zero? (in/position stream)))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
