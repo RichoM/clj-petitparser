@@ -144,10 +144,23 @@
                 result
                 (success (function (actual-result result)))))))
 
-(deftype PredicateParser [function message]
+(deftype PredicateObjectParser [function message]
   Parser
   (parse-on [self stream]
             (if (and (not (in/end? stream))
                      (function (in/peek stream)))
               (success (in/next! stream))
               (failure (in/position stream) message))))
+
+(deftype PredicateSequenceParser [function message count]
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                   result (in/take! stream count)]
+              (if (and (= count (clojure.core/count result))
+                       (function result))
+                (success result)
+                (do
+                  (in/reset-position! stream start)
+                  (failure (in/position stream)
+                           message))))))

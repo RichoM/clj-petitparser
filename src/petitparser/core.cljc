@@ -1,6 +1,7 @@
 (ns petitparser.core
   (:refer-clojure :exclude [or flatten and min max not])
   (:require [clojure.core :as clj]
+            [clojure.string :as str]
             [petitparser.parsers :as parsers]
             [petitparser.results :refer :all]
             [petitparser.input-stream :as in]
@@ -59,7 +60,7 @@
   (petitparser.parsers.ActionParser. (as-parser parser) function))
 
 (defn predicate [function message]
-  (petitparser.parsers.PredicateParser. function message))
+  (petitparser.parsers.PredicateObjectParser. function message))
 
 (defn- digit? [^Character chr] (Character/isDigit chr))
 (defn- letter? [^Character chr] (Character/isLetter chr))
@@ -72,6 +73,41 @@
 (def word (predicate letter-or-digit? "Letter or digit expected"))
 (def space (predicate whitespace? "White space expected"))
 
+(defn predicate-sequence [function message count]
+  (petitparser.parsers.PredicateSequenceParser. function message count))
+
+(defmulti case-insensitive class)
+
+(defmethod case-insensitive
+  petitparser.parsers.LiteralObjectParser
+  [^petitparser.parsers.LiteralObjectParser parser]
+  (let [literal (.literal parser)]
+    (if (= (str/upper-case literal)
+           (str/lower-case literal))
+      parser
+      (let [lower (str/lower-case literal)]
+        (predicate (fn [char] (= lower (str/lower-case char)))
+                   (str "Literal '" lower "' expected"))))))
+
+(defmethod case-insensitive
+  petitparser.parsers.LiteralSequenceParser
+  [^petitparser.parsers.LiteralSequenceParser parser]
+  (let [literal (.literal parser)]
+    (if (= (str/upper-case literal)
+           (str/lower-case literal))
+      parser
+      (let [lower (str/lower-case literal)]
+        (predicate-sequence
+         (fn [str] (= lower (str/lower-case str)))
+         (str "Literal '" lower "' expected")
+         (count lower))))))
+
+(defmethod case-insensitive java.lang.Character [char]
+  (case-insensitive (as-parser char)))
+
+(defmethod case-insensitive java.lang.String [str]
+  (case-insensitive (as-parser str)))
+
 (def parse-on parsers/parse-on)
 
 (defn parse [parser src]
@@ -79,3 +115,7 @@
 
 (defn matches? [parser src]
   (success? (parse-on parser (in/make-stream src))))
+
+(comment
+
+ ,)

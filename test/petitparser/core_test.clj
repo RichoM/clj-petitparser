@@ -142,6 +142,19 @@
     (is (pp/matches? pp "a"))
     (is (not (pp/matches? pp "b")))))
 
+(deftest case-insensitive
+  (let [pp (pp/flatten [(pp/case-insensitive \f)
+                        (pp/case-insensitive \o)
+                        (pp/case-insensitive \o)
+                        (pp/case-insensitive \!)])]
+    (is (= "Foo!" (pp/parse pp "Foo!")))
+    (is (= "FOO!" (pp/parse pp "FOO!")))
+    (is (= "foo!" (pp/parse pp "foo!"))))
+  (let [pp (pp/case-insensitive "foo!")]
+    (is (= "Foo!" (pp/parse pp "Foo!")))
+    (is (= "FOO!" (pp/parse pp "FOO!")))
+    (is (= "foo!" (pp/parse pp "foo!")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
