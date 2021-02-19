@@ -4,8 +4,6 @@
             [petitparser.input-stream :as in]
             [petitparser.token :as t]))
 
-(defprotocol ParserBuilder (as-parser [self]))
-
 (defprotocol Parser (parse-on [self stream]))
 
 (defprotocol ParseResult
@@ -37,8 +35,6 @@
    (ParseFailure. position message)))
 
 (deftype LiteralObjectParser [literal]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (if (= literal (in/peek stream))
@@ -47,8 +43,6 @@
                        (str "Literal '" literal "' expected")))))
 
 (deftype LiteralSequenceParser [literal count]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
@@ -61,8 +55,6 @@
                            (str "Literal '" literal "' expected")))))))
 
 (deftype SequenceParser [parsers]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
@@ -75,8 +67,6 @@
                   (first (filter failure? elements)))))))
 
 (deftype ChoiceParser [parsers]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [results (map #(parse-on % stream)
@@ -86,8 +76,6 @@
                 (first (filter success? results))))))
 
 (deftype FlattenParser [parser]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -100,8 +88,6 @@
                                   start)))))))
 
 (deftype AndParser [parser]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -110,8 +96,6 @@
               result)))
 
 (deftype EndParser [parser]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -125,8 +109,6 @@
                   fail)))))
 
 (deftype RepeatingParser [parser ^long min ^long max]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -153,8 +135,6 @@
                   (success @elements))))))
 
 (deftype NotParser [parser]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -165,8 +145,6 @@
                 (success nil)))))
 
 (deftype OptionalParser [parser]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [result (parse-on parser stream)]
@@ -175,8 +153,6 @@
                 (success nil)))))
 
 (deftype TokenParser [parser]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -190,8 +166,6 @@
                   (success token))))))
 
 (deftype ActionParser [parser function]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (let [result (parse-on parser stream)]
@@ -200,8 +174,6 @@
                 (success (function (actual-result result)))))))
 
 (deftype PredicateParser [function message]
-  ParserBuilder
-  (as-parser [self] self)
   Parser
   (parse-on [self stream]
             (if (clj/and (clj/not (in/end? stream))
@@ -209,17 +181,18 @@
               (success (in/next! stream))
               (failure (in/position stream) message))))
 
-(extend-type java.lang.Character
-  ParserBuilder
-  (as-parser [char] (LiteralObjectParser. char)))
+(defmulti as-parser class)
 
-(extend-type java.lang.String
-  ParserBuilder
-  (as-parser [str] (LiteralSequenceParser. str (count str))))
+(defmethod as-parser java.lang.Character [char]
+  (LiteralObjectParser. char))
 
-(extend-type java.util.List
-  ParserBuilder
-  (as-parser [parsers] (SequenceParser. (mapv as-parser parsers))))
+(defmethod as-parser java.lang.String [str]
+  (LiteralSequenceParser. str (count str)))
+
+(defmethod as-parser java.util.List [parsers]
+  (SequenceParser. (mapv as-parser parsers)))
+
+(defmethod as-parser petitparser.core.Parser [parser] parser)
 
 (defn or [& parsers]
   (ChoiceParser. (mapv as-parser parsers)))
