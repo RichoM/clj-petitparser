@@ -1,7 +1,8 @@
 (ns clj-petitparser.core-test
   (:require [clojure.test :refer :all]
             [clj-petitparser.core :as pp]
-            [clj-petitparser.input-stream :as in]))
+            [clj-petitparser.input-stream :as in]
+            [clj-petitparser.token :as t]))
 
 (deftest a-test
   (testing "FIXME, I fail."
@@ -108,6 +109,14 @@
   (let [pp (pp/optional "foo")]
     (is (= "foo" (pp/parse pp "foo")))
     (is (nil? (pp/parse pp "bar")))))
+
+(deftest token-parser
+  (let [pp (pp/token "foo")
+        token (pp/parse pp "foo")]
+    (is (= 0 (t/start token)))
+    (is (= 3 (t/count token)))
+    (is (= "foo" (t/parsed-value token)))
+    (is (= "foo" (t/input-value token)))))
 
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")

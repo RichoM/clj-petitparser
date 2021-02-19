@@ -1,7 +1,8 @@
 (ns clj-petitparser.core
   (:refer-clojure :exclude [or flatten])
   (:require [clojure.core :as clj]
-            [clj-petitparser.input-stream :as in]))
+            [clj-petitparser.input-stream :as in]
+            [clj-petitparser.token :as t]))
 
 (defprotocol ParserBuilder (as-parser [self]))
 
@@ -173,6 +174,21 @@
                 result
                 (success nil)))))
 
+(deftype TokenParser [parser]
+  ParserBuilder
+  (as-parser [self] self)
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                  result (parse-on parser stream)]
+              (if (is-failure? result)
+                result
+                (let [token (t/make-token (in/source stream)
+                                          start
+                                          (- (in/position stream) start)
+                                          (actual-result result))]
+                  (success token))))))
+
 (extend-type java.lang.Character
   ParserBuilder
   (as-parser [char] (LiteralObjectParser. char)))
@@ -218,81 +234,11 @@
 (defn optional [parser]
   (OptionalParser. (as-parser parser)))
 
+(defn token [parser]
+  (TokenParser. (as-parser parser)))
+
 (defn parse [parser src]
   (actual-result (parse-on parser (in/make-stream src))))
 
 (comment
- (require '[clj-petitparser.input-stream :as in])
- (class \a)
- (class "Richo")
- (ancestors (type (seq [1 2 3])))
- clojure.lang.ISeq
-
-
- (def stream (in/make-stream "Richo capo"))
- (def parser (as-parser [(or "perro"
-                             "gato"
-                             "león")
-                         " "
-                         (or "hambriento"
-                             "cansado"
-                             "feliz")]))
-
- (class (repeatedly 11 (fn [] (in/next! stream))))
-
- (parse parser "gato feliz")
-
- (parse (star "foo") "foofoofoo")
-
-
- Integer/MAX_VALUE
-
- (apply format "%s at %d" ["Richo expected" 1])
-
- (parse (as-parser ["richo" "capo"]) "richocapo")
-
- (parse (as-parser [\a \b \c]) "abd")
-
- (ancestors (type (as-parser "richo")))
-
- (parse-on (RepeatingParser. (as-parser "foo") 4 Integer/MAX_VALUE)
-           (in/make-stream "foofoobarfoo"))
-
- (do
-   (def parser (as-parser "a"))
-   (def stream (in/make-stream "aaaaab"))
-   (def results (repeatedly #(parse-on parser stream))))
-
- (mapv actual-result (take-while is-success? results))
- (.position (first (drop-while is-success? results)))
- (in/end? stream)
- (in/position stream)
- (in/peek stream)
- (realized? results)
- (vec results)
-
-
-
-
-
- (def elements (atom []))
- (time (dotimes [i 100000]
-                (swap! elements conj i)))
- @elements
-
-
- (def elements (atom (transient [])))
- (time (dotimes [i 100000]
-                (swap! elements conj! i)))
- (persistent! @elements)
-
-
-
-
-
-
-
-
-
-
  ,)
