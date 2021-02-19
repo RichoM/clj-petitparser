@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [petitparser.core :as pp]
             [petitparser.input-stream :as in]
-            [petitparser.token :as t]))
+            [petitparser.token :as t]
+            [petitparser.results :as r]))
 
 (deftest a-test
   (testing "FIXME, I fail."
@@ -47,7 +48,7 @@
 (deftest and-parser
   (let [pp (pp/as-parser ["foo" (pp/and "bar")])
         stream (in/make-stream "foobar")
-        result (pp/actual-result (pp/parse-on pp stream))]
+        result (r/actual-result (pp/parse-on pp stream))]
     (is (= ["foo" "bar"] result))
     (is (= 3 (in/position stream)))))
 

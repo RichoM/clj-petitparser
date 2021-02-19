@@ -1,4 +1,5 @@
-(ns petitparser.token)
+(ns petitparser.token
+  (:refer-clojure :exclude [count]))
 
 (defn make-token [source start count value]
   {:source source
@@ -11,8 +12,8 @@
 (defn count [token] (:count token))
 (defn parsed-value [token] (:parsed-value token))
 
-(defn stop [{:keys [start count]}]
+(defn stop [{:keys [^long start ^long count]}]
   (+ start count))
 
-(defn input-value [{:keys [source start count]}]
+(defn input-value [{:keys [source ^long start ^long count]}]
   (subs source start (+ start count)))
