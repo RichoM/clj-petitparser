@@ -9,20 +9,20 @@
 (defprotocol Parser (parse-on [self stream]))
 
 (defprotocol ParseResult
-  (is-success? [self])
-  (is-failure? [self])
+  (success? [self])
+  (failure? [self])
   (actual-result [self]))
 
 (deftype ParseSuccess [result]
   ParseResult
-  (is-success? [_] true)
-  (is-failure? [_] false)
+  (success? [_] true)
+  (failure? [_] false)
   (actual-result [_] result))
 
 (deftype ParseFailure [position message]
   ParseResult
-  (is-success? [_] false)
-  (is-failure? [_] true)
+  (success? [_] false)
+  (failure? [_] true)
   (actual-result [_]
                  (throw (ex-info (format "%s at %d" message position)
                                  {:position position}))))
@@ -68,11 +68,11 @@
             (let [position (in/position stream)
                   elements (map #(parse-on % stream)
                               parsers)]
-              (if (every? is-success? elements)
+              (if (every? success? elements)
                 (success (mapv actual-result elements))
                 (do
                   (in/reset-position! stream position)
-                  (first (filter is-failure? elements)))))))
+                  (first (filter failure? elements)))))))
 
 (deftype ChoiceParser [parsers]
   ParserBuilder
@@ -81,9 +81,9 @@
   (parse-on [self stream]
             (let [results (map #(parse-on % stream)
                                parsers)]
-              (if (every? is-failure? results)
+              (if (every? failure? results)
                 (last results)
-                (first (filter is-success? results))))))
+                (first (filter success? results))))))
 
 (deftype FlattenParser [parser]
   ParserBuilder
@@ -92,7 +92,7 @@
   (parse-on [self stream]
             (let [start (in/position stream)
                   result (parse-on parser stream)]
-              (if (is-failure? result)
+              (if (failure? result)
                 result
                 (success (subs (in/source stream)
                                start
@@ -116,7 +116,7 @@
   (parse-on [self stream]
             (let [start (in/position stream)
                   result (parse-on parser stream)]
-              (if (clj/or (is-failure? result)
+              (if (clj/or (failure? result)
                           (in/end? stream))
                 result
                 (let [fail (failure (in/position stream)
@@ -135,7 +135,7 @@
               (loop [count 0]
                 (when (< count min)
                   (let [result (parse-on parser stream)]
-                    (if (is-success? result)
+                    (if (success? result)
                       (do
                         (swap! elements conj (actual-result result))
                         (recur (inc count)))
@@ -147,7 +147,7 @@
                 (do (loop [count 0]
                       (when (< count max)
                         (let [result (parse-on parser stream)]
-                          (when (is-success? result)
+                          (when (success? result)
                             (swap! elements conj (actual-result result))
                             (recur (inc count))))))
                   (success @elements))))))
@@ -160,7 +160,7 @@
             (let [start (in/position stream)
                   result (parse-on parser stream)]
               (in/reset-position! stream start)
-              (if (is-success? result)
+              (if (success? result)
                 (failure (in/position stream) "")
                 (success nil)))))
 
@@ -170,7 +170,7 @@
   Parser
   (parse-on [self stream]
             (let [result (parse-on parser stream)]
-              (if (is-success? result)
+              (if (success? result)
                 result
                 (success nil)))))
 
@@ -181,7 +181,7 @@
   (parse-on [self stream]
             (let [start (in/position stream)
                   result (parse-on parser stream)]
-              (if (is-failure? result)
+              (if (failure? result)
                 result
                 (let [token (t/make-token (in/source stream)
                                           start
@@ -195,7 +195,7 @@
   Parser
   (parse-on [self stream]
             (let [result (parse-on parser stream)]
-              (if (is-failure? result)
+              (if (failure? result)
                 result
                 (success (function (actual-result result)))))))
 
