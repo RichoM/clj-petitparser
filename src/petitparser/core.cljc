@@ -47,6 +47,9 @@
 (defn max [parser n]
   (petitparser.parsers.RepeatingParser. (as-parser parser) 0 n))
 
+(defn plus-greedy [parser limit]
+  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 1 Integer/MAX_VALUE (as-parser limit)))
+
 (defn not [parser]
   (petitparser.parsers.NotParser. (as-parser parser)))
 
@@ -117,5 +120,8 @@
   (success? (parse-on parser (in/make-stream src))))
 
 (comment
-
+ (def pp (end [(flatten (plus-greedy "a" "ab"))
+               "abc"
+               (flatten (star digit))]))
+ (parse pp "aaaaabc42")
  ,)

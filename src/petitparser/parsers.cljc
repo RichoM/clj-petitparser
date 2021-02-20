@@ -104,6 +104,52 @@
                             (recur (inc count))))))
                   (success @elements))))))
 
+(deftype GreedyRepeatingParser [parser min max limit]
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                  elements (atom [])
+                  return (atom nil)]
+              (loop [count 0]
+                (when (< count min)
+                  (let [result (parse-on parser stream)]
+                    (if (success? result)
+                      (do
+                        (swap! elements conj (actual-result result))
+                        (recur (inc count)))
+                      (do
+                        (in/reset-position! stream start)
+                        (reset! return result))))))
+              (if @return
+                @return
+                (let [positions (atom [(in/position stream)])]
+                  (loop [count (clojure.core/count @elements)]
+                    (when (< count max)
+                      (let [result (parse-on parser stream)]
+                        (when (success? result)
+                          (swap! elements conj (actual-result result))
+                          (swap! positions conj (in/position stream))
+                          (recur (inc count))))))
+                  (loop [count (clojure.core/count @positions)]
+                    (when (> count 0)
+                      (in/reset-position! stream (last @positions))
+                      (let [result (parse-on limit stream)]
+                        (if (success? result)
+                          (do
+                            (in/reset-position! stream (last @positions))
+                            (reset! return (success @elements)))
+                          (if (empty? @elements)
+                            (do
+                              (in/reset-position! stream start)
+                              (reset! return result))
+                            (do
+                              (swap! elements pop)
+                              (swap! positions pop)
+                              (recur (dec count))))))))
+                  (if @return
+                    @return
+                    (failure start "Overflow")))))))
+
 (deftype NotParser [parser]
   Parser
   (parse-on [self stream]

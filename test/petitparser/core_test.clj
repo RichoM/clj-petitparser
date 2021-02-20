@@ -168,8 +168,21 @@
     (is (thrown? clojure.lang.ExceptionInfo
                  (pp/parse pp "Baz 56")))))
 
-#_(deftest greedy-repeating-parser-plus
-  (let [pp (pp/plus-greedy )]))
+(deftest greedy-repeating-parser-plus
+  (let [pp (pp/transform (pp/end [(pp/flatten (pp/plus-greedy pp/word
+                                                              (pp/or (pp/case-insensitive "upper")
+                                                                     (pp/case-insensitive "lower"))))
+                                  (pp/flatten (pp/or (pp/case-insensitive "upper")
+                                                     (pp/case-insensitive "lower")))])
+                         (fn [[word case*]]
+                           (condp = (str/lower-case case*)
+                             "lower" (str/lower-case word)
+                             "upper" (str/upper-case word)
+                             "WAT")))]
+    (is (= "abcupperlowerupper" (pp/parse pp "abcupperLowerUPPERlower")))
+    (is (= "ABC" (pp/parse pp "abcupper")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "upper")))))
 
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
@@ -177,4 +190,20 @@
  (= (seq [\a \b \c]) [\a \b \c])
  (str/index-of "Richo" \a)
  (read-string "42")
+
+ (def pp (pp/transform (pp/end [(pp/flatten (pp/plus-greedy pp/word
+                                                            (pp/or (pp/case-insensitive "upper")
+                                                                   (pp/case-insensitive "lower"))))
+                                (pp/flatten (pp/or (pp/case-insensitive "upper")
+                                                   (pp/case-insensitive "lower")))])
+                       (fn [[word case*]]
+                         (condp = (str/lower-case case*)
+                           "lower" (str/lower-case word)
+                           "upper" (str/upper-case word)
+                           "WAT"))))
+
+ (pp/parse (pp/case-insensitive "upper")
+           "UPPER")
+ (pp/parse (pp/plus pp/word)
+           "Richo")
  ,)
