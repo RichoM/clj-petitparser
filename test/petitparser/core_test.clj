@@ -184,6 +184,21 @@
     (is (thrown? clojure.lang.ExceptionInfo
                  (pp/parse pp "upper")))))
 
+(deftest greedy-repeating-parser-star
+  (let [pp (pp/transform (pp/end [(pp/flatten (pp/star-greedy pp/word
+                                                              (pp/or (pp/case-insensitive "upper")
+                                                                     (pp/case-insensitive "lower"))))
+                                  (pp/flatten (pp/or (pp/case-insensitive "upper")
+                                                     (pp/case-insensitive "lower")))])
+                         (fn [[word case*]]
+                           (condp = (str/lower-case case*)
+                             "lower" (str/lower-case word)
+                             "upper" (str/upper-case word)
+                             "WAT")))]
+    (is (= "abcupperlowerupper" (pp/parse pp "abcupperLowerUPPERlower")))
+    (is (= "ABC" (pp/parse pp "abcupper")))
+    (is (= "" (pp/parse pp "upper")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")

@@ -50,6 +50,9 @@
 (defn plus-greedy [parser limit]
   (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 1 Integer/MAX_VALUE (as-parser limit)))
 
+(defn star-greedy [parser limit]
+  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 0 Integer/MAX_VALUE (as-parser limit)))
+
 (defn not [parser]
   (petitparser.parsers.NotParser. (as-parser parser)))
 
