@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [or flatten and min max not seq])
   (:require [clojure.core :as clj]
             [clojure.string :as str]
+            [clojure.walk :as w]
             [petitparser.parsers :as parsers]
             [petitparser.results :refer :all]
             [petitparser.input-stream :as in]
@@ -133,11 +134,24 @@
          (str "Literal '" lower "' expected")
          (count lower))))))
 
+(defmethod case-insensitive
+  petitparser.parsers.Parser
+  [parser]
+  (w/postwalk (fn [each]
+                (condp isa? (class each)
+                  petitparser.parsers.LiteralSequenceParser (case-insensitive each)
+                  petitparser.parsers.LiteralObjectParser (case-insensitive each)
+                  each))
+              parser))
+
 (defmethod case-insensitive java.lang.Character [char]
   (case-insensitive (as-parser char)))
 
 (defmethod case-insensitive java.lang.String [str]
   (case-insensitive (as-parser str)))
+
+(defmethod case-insensitive :default [obj]
+  (case-insensitive (as-parser obj)))
 
 (defn negate [parser]
   (transform [(not parser) any]

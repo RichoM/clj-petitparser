@@ -155,14 +155,14 @@
     (is (= "FOO!" (pp/parse pp "FOO!")))
     (is (= "foo!" (pp/parse pp "foo!")))))
 
-(deftest a-more-complete-parser
-  (let [pp (pp/transform [(pp/or (pp/case-insensitive "foo")
-                                 (pp/case-insensitive "bar"))
-                          (pp/plus pp/space)
-                          (pp/flatten (pp/plus pp/digit))
-                          (pp/optional "!")]
-                         (fn [[word _ num _]]
-                           [(str/lower-case word) (read-string num)]))]
+(deftest case-insensitive-applied-at-the-top
+  (let [pp (pp/case-insensitive
+            (pp/transform [(pp/or "foo" "bar")
+                           (pp/plus pp/space)
+                           (pp/flatten (pp/plus pp/digit))
+                           (pp/optional "!")]
+                          (fn [[word _ num _]]
+                            [(str/lower-case word) (read-string num)])))]
     (is (= ["foo" 4] (pp/parse pp "Foo 4!")))
     (is (= ["bar" 432] (pp/parse pp "BAR      432")))
     (is (thrown? clojure.lang.ExceptionInfo
