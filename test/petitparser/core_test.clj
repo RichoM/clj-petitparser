@@ -234,6 +234,15 @@
     (is (thrown? clojure.lang.ExceptionInfo
                  (pp/parse pp "abcupperlower")))))
 
+(deftest negate-parser
+  (let [pp (pp/seq (pp/negate pp/digit)
+                   pp/digit)]
+    (is (pp/matches? pp "a2"))
+    (is (pp/matches? pp "?2"))
+    (is (not (pp/matches? pp "22")))
+    (is (not (pp/matches? pp "2a")))))
+
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")

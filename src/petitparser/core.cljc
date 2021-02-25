@@ -1,5 +1,5 @@
 (ns petitparser.core
-  (:refer-clojure :exclude [or flatten and min max not])
+  (:refer-clojure :exclude [or flatten and min max not seq])
   (:require [clojure.core :as clj]
             [clojure.string :as str]
             [petitparser.parsers :as parsers]
@@ -19,6 +19,9 @@
   (petitparser.parsers.SequenceParser. (mapv as-parser parsers)))
 
 (defmethod as-parser petitparser.parsers.Parser [parser] parser)
+
+(defn seq [& parsers]
+  (as-parser parsers))
 
 (defn or [& parsers]
   (petitparser.parsers.ChoiceParser. (mapv as-parser parsers)))
@@ -119,6 +122,10 @@
 
 (defmethod case-insensitive java.lang.String [str]
   (case-insensitive (as-parser str)))
+
+(defn negate [parser]
+  (transform [(not parser) any]
+             second))
 
 (def parse-on parsers/parse-on)
 
