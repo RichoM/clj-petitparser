@@ -19,6 +19,9 @@
 (defmethod as-parser java.util.List [parsers]
   (petitparser.parsers.SequenceParser. (mapv as-parser parsers)))
 
+(defmethod as-parser clojure.lang.Keyword [keyword]
+  (petitparser.parsers.PlaceholderParser. keyword))
+
 (defmethod as-parser petitparser.parsers.Parser [parser] parser)
 
 (defn seq [& parsers]
@@ -171,6 +174,48 @@
                          (next rest)))
                      @result))))))
 
+(defn- delegate []
+  (petitparser.parsers.DelegateParser. (atom nil)))
+
+(defn- resolve! [^petitparser.parsers.DelegateParser delegate parser]
+  (reset! (.parser delegate) parser))
+
+(defn compose
+  ([grammar] (compose grammar {}))
+  ([grammar transformations]
+
+   (let [; Change all keys to delegate parsers
+         parser
+         (into {}
+               (map (fn [[key _]] [key (delegate)])
+                    grammar))
+
+         ; Replace placeholders with the actual parsers
+         actual-grammar
+         (into {}
+               (map (fn [[key val]]
+                      [key (w/prewalk (fn [each]
+                                        (if (instance? petitparser.parsers.PlaceholderParser
+                                                       each)
+                                          (let [^petitparser.parsers.PlaceholderParser placeholder each
+                                                key (.key placeholder)]
+                                            (clj/or (get parser key)
+                                                    (throw (ex-info (format "Grammar not found for keyword %s" key)
+                                                                    {:grammar grammar}))))
+                                          each))
+                                      (as-parser val))])
+                    grammar))]
+
+     ; Resolve all delegate parsers (apply transformations!)
+     (doseq [key (keys actual-grammar)]
+       (resolve! (get parser key)
+                 (if-let [tran (get transformations key)]
+                   (transform (get actual-grammar key) tran)
+                   (get actual-grammar key))))
+
+     ; Return the start parser
+     (:start parser))))
+
 (def parse-on parsers/parse-on)
 
 (defn parse [parser src]
@@ -180,8 +225,12 @@
   (success? (parse-on parser (in/make-stream src))))
 
 (comment
- (def pp (end [(flatten (plus-greedy "a" "ab"))
-               "abc"
-               (flatten (star digit))]))
- (parse pp "aaaaabc42")
+
+ (def grammar
+   {:start :number
+    :number (trim (flatten [(optional \-)
+                            (plus digit)
+                            (optional [\.
+                                       (plus digit)])])
+                  space)})
  ,)

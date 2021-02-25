@@ -273,3 +273,14 @@
                   (in/reset-position! stream start)
                   (failure (in/position stream)
                            message))))))
+
+(defrecord PlaceholderParser [key]
+  Parser
+  (parse-on [self stream]
+            (failure (in/position stream)
+                     (format "Parser not found for keyword %s" key))))
+
+(defrecord DelegateParser [parser]
+  Parser
+  (parse-on [self stream]
+            (parse-on @parser stream)))
