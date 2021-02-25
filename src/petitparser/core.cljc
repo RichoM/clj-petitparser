@@ -143,6 +143,20 @@
   (transform [(not parser) any]
              second))
 
+(defn separated-by [parser separator]
+  (transform [parser (star [separator parser])]
+             (fn [[f s]]
+               (let [result (atom [f])]
+                 (loop [[p0 p1] (first s)
+                        rest (next s)]
+                   (if p0
+                     (do
+                       (swap! result conj p0 p1)
+                       (recur
+                         (first rest)
+                         (next rest)))
+                     @result))))))
+
 (def parse-on parsers/parse-on)
 
 (defn parse [parser src]

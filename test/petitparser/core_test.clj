@@ -284,6 +284,35 @@
     (is (thrown? clojure.lang.ExceptionInfo
                  (pp/parse pp "abc")))))
 
+(deftest separated-by
+  (let [pp (pp/end (pp/separated-by pp/digit \,))]
+    (is (= [\3 \, \4 \, \5]
+           (pp/parse pp "3,4,5")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "3,4,5,")))))
+
+(deftest separated-by-2
+  (let [identifier (pp/or (pp/transform [\[
+                                         (-> (pp/predicate #(and (not= \[ %)
+                                                                 (not= \] %))
+                                                           "Any except square brackets expected")
+                                             pp/plus
+                                             pp/flatten)
+                                         \]]
+                                        (fn [[left body right]] body))
+                          (pp/flatten (pp/plus (pp/or pp/word \_))))
+        ws pp/space
+        pp (pp/separated-by [(pp/star ws)
+                             identifier
+                             (pp/star ws)
+                             (pp/or (pp/case-insensitive "ASC")
+                                    (pp/case-insensitive "DESC"))
+                             (pp/star ws)]
+                            \,)]
+    (is (pp/matches? pp "[id] ASC"))
+    (is (pp/matches? pp "\n	[id] ASC, [model] desc"))
+    (is (pp/matches? pp "[id]ASC,[model]desc"))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
@@ -291,9 +320,4 @@
  (str/index-of "Richo" \a)
  (read-string "42")
 
- *e
-
- (def pp (pp/trim "+" pp/space))
- (pp/parse-on pp/space (in/make-stream ""))
- (pp/parse pp "+")
  ,)
