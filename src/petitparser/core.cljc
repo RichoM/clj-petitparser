@@ -62,6 +62,18 @@
 (defn star-lazy [parser limit]
   (petitparser.parsers.LazyRepeatingParser. (as-parser parser) 0 Integer/MAX_VALUE (as-parser limit)))
 
+(defn min-greedy [parser min limit]
+  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) min Integer/MAX_VALUE (as-parser limit)))
+
+(defn max-greedy [parser max limit]
+  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 0 max (as-parser limit)))
+
+(defn min-lazy [parser min limit]
+  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) min Integer/MAX_VALUE (as-parser limit)))
+
+(defn max-lazy [parser max limit]
+  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) 0 max (as-parser limit)))
+
 (defn not [parser]
   (petitparser.parsers.NotParser. (as-parser parser)))
 

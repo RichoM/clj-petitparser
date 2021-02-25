@@ -249,6 +249,41 @@
     (is (thrown? clojure.lang.ExceptionInfo
                  (pp/parse pp " . "))))))
 
+(deftest greedy-repeating-parser-min
+  (let [pp (pp/transform (pp/end [(pp/flatten (pp/min-greedy pp/any
+                                                             3
+                                                             (pp/case-insensitive "END")))
+                                  (pp/case-insensitive "END")])
+                         first)]
+    (is (= "abc" (pp/parse pp "abcEND")))
+    (is (= "abcdef" (pp/parse pp "abcdefEND")))
+    (is (= "end" (pp/parse pp "endEND")))
+    (is (= "abcend" (pp/parse pp "abcendEND")))
+    (is (= "ENDabc" (pp/parse pp "ENDabcEND")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "abc")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "END")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "abend")))))
+
+(deftest greedy-repeating-parser-max
+  (let [pp (pp/transform (pp/end [(pp/flatten (pp/max-greedy pp/any
+                                                             3
+                                                             (pp/case-insensitive "END")))
+                                  (pp/case-insensitive "END")])
+                         first)]
+    (is (= "abc" (pp/parse pp "abcEND")))
+    (is (= "a" (pp/parse pp "aEND")))
+    (is (= "" (pp/parse pp "END")))
+    (is (= "end" (pp/parse pp "endEND")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "abcendEND")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "ENDabcEND")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "abc")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
