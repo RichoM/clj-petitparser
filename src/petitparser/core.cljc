@@ -137,12 +137,12 @@
 (defmethod case-insensitive
   petitparser.parsers.Parser
   [parser]
-  (w/postwalk (fn [each]
-                (condp isa? (class each)
-                  petitparser.parsers.LiteralSequenceParser (case-insensitive each)
-                  petitparser.parsers.LiteralObjectParser (case-insensitive each)
-                  each))
-              parser))
+  (w/prewalk (fn [each]
+               (condp isa? (class each)
+                 petitparser.parsers.LiteralSequenceParser (case-insensitive each)
+                 petitparser.parsers.LiteralObjectParser (case-insensitive each)
+                 each))
+             parser))
 
 (defmethod case-insensitive java.lang.Character [char]
   (case-insensitive (as-parser char)))
