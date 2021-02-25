@@ -156,6 +156,47 @@
                     @return
                     (failure start "Overflow")))))))
 
+(deftype LazyRepeatingParser [parser min max limit]
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                   elements (atom [])
+                   return (atom nil)
+                   matches-limit? #(let [start (in/position stream)
+                                          result (parse-on limit stream)]
+                                     (in/reset-position! stream start)
+                                     (success? result))]
+              (loop [count 0]
+                (when (< count min)
+                  (let [result (parse-on parser stream)]
+                    (if (success? result)
+                      (do
+                        (swap! elements conj (actual-result result))
+                        (recur (inc count)))
+                      (do
+                        (in/reset-position! stream start)
+                        (reset! return result))))))
+              (if @return
+                @return
+                (do
+                  (loop [count (clojure.core/count @elements)]
+                    (when-not (matches-limit?)
+                      (if (>= count max)
+                        (do
+                          (in/reset-position! stream start)
+                          (reset! return (failure start "Overflow")))
+                        (let [result (parse-on parser stream)]
+                          (if (failure? result)
+                            (do
+                              (in/reset-position! stream start)
+                              (reset! return result))
+                            (do
+                              (swap! elements conj (actual-result result))
+                              (recur (inc count))))))))
+                  (if @return
+                    @return
+                    (success @elements)))))))
+
 (deftype NotParser [parser]
   Parser
   (parse-on [self stream]

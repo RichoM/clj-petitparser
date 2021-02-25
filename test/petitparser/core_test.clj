@@ -199,6 +199,41 @@
     (is (= "ABC" (pp/parse pp "abcupper")))
     (is (= "" (pp/parse pp "upper")))))
 
+(deftest lazy-repeating-parser-plus
+  (let [pp (pp/transform (pp/end [(pp/flatten (pp/plus-lazy pp/any
+                                                            (pp/or (pp/case-insensitive "upper")
+                                                                   (pp/case-insensitive "lower"))))
+                                  (pp/flatten (pp/or (pp/case-insensitive "upper")
+                                                     (pp/case-insensitive "lower")))])
+                         (fn [[word case*]]
+                           (condp = (str/lower-case case*)
+                             "lower" (str/lower-case word)
+                             "upper" (str/upper-case word)
+                             "WAT")))]
+    (is (= " abc! " (pp/parse pp " abc! LOWER")))
+    (is (= "ABC" (pp/parse pp "abcupper")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "upper")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "abcupperLOWER")))))
+
+(deftest lazy-repeating-parser-star
+  (let [pp (pp/transform (pp/end [(pp/flatten (pp/star-lazy pp/any
+                                                            (pp/or (pp/case-insensitive "upper")
+                                                                   (pp/case-insensitive "lower"))))
+                                  (pp/flatten (pp/or (pp/case-insensitive "upper")
+                                                     (pp/case-insensitive "lower")))])
+                         (fn [[word case*]]
+                           (condp = (str/lower-case case*)
+                             "lower" (str/lower-case word)
+                             "upper" (str/upper-case word)
+                             "WAT")))]
+    (is (= " abc! " (pp/parse pp " abc! LOWER")))
+    (is (= "ABC" (pp/parse pp "abcupper")))
+    (is (= "" (pp/parse pp "upper")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp "abcupperlower")))))
+
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
  (re-find #"Literal '" "Literal 'a' expected")
@@ -206,19 +241,33 @@
  (str/index-of "Richo" \a)
  (read-string "42")
 
- (def pp (pp/transform (pp/end [(pp/flatten (pp/plus-greedy pp/word
-                                                            (pp/or (pp/case-insensitive "upper")
-                                                                   (pp/case-insensitive "lower"))))
-                                (pp/flatten (pp/or (pp/case-insensitive "upper")
-                                                   (pp/case-insensitive "lower")))])
-                       (fn [[word case*]]
-                         (condp = (str/lower-case case*)
-                           "lower" (str/lower-case word)
-                           "upper" (str/upper-case word)
-                           "WAT"))))
+ *e
 
- (pp/parse (pp/case-insensitive "upper")
-           "UPPER")
- (pp/parse (pp/plus pp/word)
-           "Richo")
+ (def pp (pp/end [(pp/flatten (pp/plus-lazy pp/any
+                                            (pp/or (pp/case-insensitive "upper")
+                                                   (pp/case-insensitive "lower"))))
+                  (pp/flatten (pp/or (pp/case-insensitive "upper")
+                                     (pp/case-insensitive "lower")))]))
+ (def pp (pp/transform (pp/end [(pp/flatten (pp/plus-lazy pp/any
+                                                           (pp/or (pp/case-insensitive "upper")
+                                                                  (pp/case-insensitive "lower"))))
+                                 (pp/flatten (pp/or (pp/case-insensitive "upper")
+                                                    (pp/case-insensitive "lower")))])
+                        (fn [[word case*]]
+                          (condp = (str/lower-case case*)
+                            "lower" (str/lower-case word)
+                            "upper" (str/upper-case word)
+                            "WAT"))))
+
+ (def stream (in/make-stream "upperLOWER"))
+ (def stream (in/make-stream "upperlower"))
+ (def pp (pp/case-insensitive "upper"))
+ (def pp (pp/or (pp/case-insensitive "upper")
+                (pp/case-insensitive "lower")))
+ (def pp (pp/or "upper" "lower"))
+ (r/actual-result (pp/parse-on pp stream))
+ (in/position stream)
+ (pp/parse (pp/flatten (pp/or (pp/case-insensitive "upper")
+                              (pp/case-insensitive "lower")))
+           "upperLOWER")
  ,)
