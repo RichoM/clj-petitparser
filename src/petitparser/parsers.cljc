@@ -110,7 +110,7 @@
                             (recur (inc count))))))
                   (success @elements))))))
 
-(defrecord GreedyRepeatingParser [parser min max limit]
+(defrecord GreedyRepeatingParser [parser ^long min ^long max limit]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -156,7 +156,7 @@
                     @return
                     (failure start "Overflow")))))))
 
-(defrecord LazyRepeatingParser [parser min max limit]
+(defrecord LazyRepeatingParser [parser ^long min ^long max limit]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
