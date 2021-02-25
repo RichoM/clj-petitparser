@@ -40,11 +40,17 @@
 (deftype ChoiceParser [parsers]
   Parser
   (parse-on [self stream]
-            (let [results (map #(parse-on % stream)
-                               parsers)]
-              (if (every? failure? results)
-                (last results)
-                (first (filter success? results))))))
+            (loop [parser (first parsers)
+                   rest (next parsers)
+                   fail (failure 0 "")]
+              (if-let [result (if parser (parse-on parser stream))]
+                (if (success? result)
+                  result
+                  (recur
+                    (first rest)
+                    (next rest)
+                    result))
+                fail))))
 
 (deftype FlattenParser [parser]
   Parser
