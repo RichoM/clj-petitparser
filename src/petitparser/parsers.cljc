@@ -5,7 +5,7 @@
 
 (defprotocol Parser (parse-on [self stream]))
 
-(deftype LiteralObjectParser [literal]
+(defrecord LiteralObjectParser [literal]
   Parser
   (parse-on [self stream]
             (if (= literal (in/peek stream))
@@ -13,7 +13,7 @@
               (failure (in/position stream)
                        (str "Literal '" literal "' expected")))))
 
-(deftype LiteralSequenceParser [literal count]
+(defrecord LiteralSequenceParser [literal count]
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
@@ -25,7 +25,7 @@
                   (failure position
                            (str "Literal '" literal "' expected")))))))
 
-(deftype SequenceParser [parsers]
+(defrecord SequenceParser [parsers]
   Parser
   (parse-on [self stream]
             (let [position (in/position stream)
@@ -37,7 +37,7 @@
                   (in/reset-position! stream position)
                   (first (filter failure? elements)))))))
 
-(deftype ChoiceParser [parsers]
+(defrecord ChoiceParser [parsers]
   Parser
   (parse-on [self stream]
             (loop [parser (first parsers)
@@ -52,7 +52,7 @@
                     result))
                 fail))))
 
-(deftype FlattenParser [parser]
+(defrecord FlattenParser [parser]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -63,7 +63,7 @@
                                start
                                (in/position stream)))))))
 
-(deftype AndParser [parser]
+(defrecord AndParser [parser]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -71,7 +71,7 @@
               (in/reset-position! stream start)
               result)))
 
-(deftype EndParser [parser]
+(defrecord EndParser [parser]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -84,7 +84,7 @@
                   (in/reset-position! stream start)
                   fail)))))
 
-(deftype RepeatingParser [parser ^long min ^long max]
+(defrecord RepeatingParser [parser ^long min ^long max]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -110,7 +110,7 @@
                             (recur (inc count))))))
                   (success @elements))))))
 
-(deftype GreedyRepeatingParser [parser min max limit]
+(defrecord GreedyRepeatingParser [parser min max limit]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -156,7 +156,7 @@
                     @return
                     (failure start "Overflow")))))))
 
-(deftype LazyRepeatingParser [parser min max limit]
+(defrecord LazyRepeatingParser [parser min max limit]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -197,7 +197,7 @@
                     @return
                     (success @elements)))))))
 
-(deftype NotParser [parser]
+(defrecord NotParser [parser]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -207,7 +207,7 @@
                 (failure (in/position stream) "")
                 (success nil)))))
 
-(deftype OptionalParser [parser]
+(defrecord OptionalParser [parser]
   Parser
   (parse-on [self stream]
             (let [result (parse-on parser stream)]
@@ -215,7 +215,7 @@
                 result
                 (success nil)))))
 
-(deftype TokenParser [parser]
+(defrecord TokenParser [parser]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -228,7 +228,7 @@
                                           (actual-result result))]
                   (success token))))))
 
-(deftype ActionParser [parser function]
+(defrecord ActionParser [parser function]
   Parser
   (parse-on [self stream]
             (let [result (parse-on parser stream)]
@@ -236,7 +236,7 @@
                 result
                 (success (function (actual-result result)))))))
 
-(deftype TrimmingParser [parser trimmer]
+(defrecord TrimmingParser [parser trimmer]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
@@ -253,7 +253,7 @@
                     (trim)
                     result))))))
 
-(deftype PredicateObjectParser [function message]
+(defrecord PredicateObjectParser [function message]
   Parser
   (parse-on [self stream]
             (if (and (not (in/end? stream))
@@ -261,7 +261,7 @@
               (success (in/next! stream))
               (failure (in/position stream) message))))
 
-(deftype PredicateSequenceParser [function message count]
+(defrecord PredicateSequenceParser [function message count]
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
