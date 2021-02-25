@@ -138,9 +138,9 @@
   petitparser.parsers.Parser
   [parser]
   (w/prewalk (fn [each]
-               (condp isa? (class each)
-                 petitparser.parsers.LiteralSequenceParser (case-insensitive each)
-                 petitparser.parsers.LiteralObjectParser (case-insensitive each)
+               (if (clj/or (instance? petitparser.parsers.LiteralSequenceParser each)
+                           (instance? petitparser.parsers.LiteralObjectParser each))
+                 (case-insensitive each)
                  each))
              parser))
 
