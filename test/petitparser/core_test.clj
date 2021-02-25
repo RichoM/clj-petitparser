@@ -242,6 +242,12 @@
     (is (not (pp/matches? pp "22")))
     (is (not (pp/matches? pp "2a")))))
 
+(deftest trimming-parser
+  (let [pp (pp/trim \+ pp/space)]
+    (is (= \+ (pp/parse pp "\t\n\r + \r\n\t")))
+    (is (= \+ (pp/parse pp "+"))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (pp/parse pp " . "))))))
 
 (comment
  (re-find #"Literal '\s' expected" "Literal 'a' expected")
@@ -252,31 +258,7 @@
 
  *e
 
- (def pp (pp/end [(pp/flatten (pp/plus-lazy pp/any
-                                            (pp/or (pp/case-insensitive "upper")
-                                                   (pp/case-insensitive "lower"))))
-                  (pp/flatten (pp/or (pp/case-insensitive "upper")
-                                     (pp/case-insensitive "lower")))]))
- (def pp (pp/transform (pp/end [(pp/flatten (pp/plus-lazy pp/any
-                                                           (pp/or (pp/case-insensitive "upper")
-                                                                  (pp/case-insensitive "lower"))))
-                                 (pp/flatten (pp/or (pp/case-insensitive "upper")
-                                                    (pp/case-insensitive "lower")))])
-                        (fn [[word case*]]
-                          (condp = (str/lower-case case*)
-                            "lower" (str/lower-case word)
-                            "upper" (str/upper-case word)
-                            "WAT"))))
-
- (def stream (in/make-stream "upperLOWER"))
- (def stream (in/make-stream "upperlower"))
- (def pp (pp/case-insensitive "upper"))
- (def pp (pp/or (pp/case-insensitive "upper")
-                (pp/case-insensitive "lower")))
- (def pp (pp/or "upper" "lower"))
- (r/actual-result (pp/parse-on pp stream))
- (in/position stream)
- (pp/parse (pp/flatten (pp/or (pp/case-insensitive "upper")
-                              (pp/case-insensitive "lower")))
-           "upperLOWER")
+ (def pp (pp/trim "+" pp/space))
+ (pp/parse-on pp/space (in/make-stream ""))
+ (pp/parse pp "+")
  ,)

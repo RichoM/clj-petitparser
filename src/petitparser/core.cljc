@@ -71,6 +71,10 @@
 (defn token [parser]
   (petitparser.parsers.TokenParser. (as-parser parser)))
 
+(defn trim [parser trimmer]
+  (petitparser.parsers.TrimmingParser. (as-parser parser)
+                                       (as-parser trimmer)))
+
 (defn transform [parser function]
   (petitparser.parsers.ActionParser. (as-parser parser) function))
 

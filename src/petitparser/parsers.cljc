@@ -236,6 +236,23 @@
                 result
                 (success (function (actual-result result)))))))
 
+(deftype TrimmingParser [parser trimmer]
+  Parser
+  (parse-on [self stream]
+            (let [start (in/position stream)
+                   trim #(loop []
+                           (if (success? (parse-on trimmer stream))
+                             (recur)))]
+              (trim)
+              (let [result (parse-on parser stream)]
+                (if (failure? result)
+                  (do
+                    (in/reset-position! stream start)
+                    result)
+                  (do
+                    (trim)
+                    result))))))
+
 (deftype PredicateObjectParser [function message]
   Parser
   (parse-on [self stream]
