@@ -31,22 +31,3 @@
 
 (defn take! [stream count]
   (apply str (take-seq stream count)))
-
-(defn take-while-seq [pred stream]
-  (lazy-seq
-   (if-let [next (peek stream)]
-     (if (pred next)
-       (cons (next! stream)
-             (take-while-seq pred stream))))))
-
-(defn take-while! [pred stream]
-  (apply str (take-while-seq pred stream)))
-
-(defn count-while! [pred stream]
-  (loop [n 0]
-    (let [next (peek stream)]
-      (if (and next (pred next))
-        (do
-          (next! stream)
-          (recur (inc n)))
-        n))))
