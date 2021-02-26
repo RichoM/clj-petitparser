@@ -213,8 +213,8 @@
                    (transform (get actual-grammar key) tran)
                    (get actual-grammar key))))
 
-     ; Return the start parser
-     (:start parser))))
+     ; Return the composite parser
+     (petitparser.parsers.CompositeParser. parser))))
 
 (def parse-on parsers/parse-on)
 

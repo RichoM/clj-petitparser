@@ -295,3 +295,11 @@
   Parser
   (parse-on [self stream]
             (parse-on @parser stream)))
+
+(defrecord CompositeParser [parsers]
+  Parser
+  (parse-on [self stream]
+            (parse-on (:start parsers) stream)))
+
+(defmethod print-method DelegateParser [v ^java.io.Writer w]
+  (.write w "DelegateParser"))
