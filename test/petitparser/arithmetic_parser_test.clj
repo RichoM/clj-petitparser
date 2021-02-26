@@ -32,41 +32,29 @@
   {:number (fn [value] (Double/parseDouble value))
    :parentheses second
    :addition (fn [nodes]
-               (loop [total (first nodes)
-                      rest (next nodes)]
-                 (if-not (empty? rest)
-                   (let [[op n] rest]
-                     (let [f (case op
-                               \+ +
-                               \- -
-                               (throw (Exception. (str "Invalid operand:" op))))]
-                       (recur
-                         (f total n)
-                         (drop 2 rest))))
-                   total)))
+               (let [total (first nodes)
+                     pairs (partition 2 (next nodes))
+                     operation {\+ +, \- -}]
+                 (reduce (fn [sub [op n]]
+                           ((operation op) sub n))
+                         total
+                         pairs)))
    :multiplication (fn [nodes]
-                     (loop [total (first nodes)
-                            rest (next nodes)]
-                       (if-not (empty? rest)
-                         (let [[op n] rest]
-                           (let [f (case op
-                                     \* *
-                                     \/ /
-                                     (throw (Exception. (str "Invalid operand:" op))))]
-                             (recur
-                               (f total n)
-                               (drop 2 rest))))
-                         total)))
+                     (let [total (first nodes)
+                           pairs (partition 2 (next nodes))
+                           operation {\* *, \/ /}]
+                       (reduce (fn [sub [op n]]
+                                 ((operation op) sub n))
+                               total
+                               pairs)))
    :power (fn [nodes]
-            (let [nodes (reverse nodes)]
-              (loop [total (first nodes)
-                     rest (next nodes)]
-                (if-not (empty? rest)
-                  (let [[_ n] rest]
-                    (recur
-                      (Math/pow n total)
-                      (drop 2 rest)))
-                  total))))})
+            (let [nodes (reverse nodes)
+                  total (first nodes)
+                  pairs (partition 2 (next nodes))]
+              (reduce (fn [sub [op n]]
+                        (Math/pow n sub))
+                      total
+                      pairs)))})
 
 (def pp (pp/compose grammar transformations))
 
