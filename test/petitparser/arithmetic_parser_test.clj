@@ -6,9 +6,6 @@
             [petitparser.token :as t]
             [petitparser.results :as r]))
 
-(def operations {"+" +, "-" -, "*" *, "/" /,
-                 "^" (fn [a b] (Math/pow b a))})
-
 (def grammar
   {:start (pp/end :terms)
    :terms (pp/or :addition :factors)
@@ -27,6 +24,9 @@
                                  (pp/plus pp/digit)
                                  (pp/optional [\. (pp/plus pp/digit)])])
                     pp/space)})
+
+(def operations {"+" +, "-" -, "*" *, "/" /,
+                 "^" (fn [a b] (Math/pow b a))})
 
 (defn reduce-operands [nodes]
   (let [total (first nodes)
