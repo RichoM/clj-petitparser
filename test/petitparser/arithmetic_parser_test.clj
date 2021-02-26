@@ -6,55 +6,45 @@
             [petitparser.token :as t]
             [petitparser.results :as r]))
 
+(def operations {"+" +, "-" -, "*" *, "/" /,
+                 "^" (fn [a b] (Math/pow b a))})
+
 (def grammar
   {:start (pp/end :terms)
    :terms (pp/or :addition :factors)
    :factors (pp/or :multiplication :power)
    :multiplication (pp/separated-by :power
-                                    (pp/trim (pp/or \* \/)
-                                             pp/space))
+                                    (pp/transform (pp/trim (pp/or "*" "/")
+                                                           pp/space)
+                                                  operations))
    :power (pp/separated-by :primary
-                           (pp/trim \^ pp/space))
+                           (pp/transform (pp/trim "^" pp/space)
+                                         operations))
    :primary (pp/or :number :parentheses)
    :parentheses [(pp/trim "(" pp/space)
                  :terms
                  (pp/trim ")" pp/space)]
    :addition (pp/separated-by :factors
-                              (pp/trim (pp/or \+ \-)
-                                       pp/space))
+                              (pp/transform (pp/trim (pp/or "+" "-")
+                                                     pp/space)
+                                            operations))
    :number (pp/trim (pp/flatten [(pp/optional \-)
                                  (pp/plus pp/digit)
                                  (pp/optional [\.
                                                (pp/plus pp/digit)])])
                     pp/space)})
 
+(defn reduce-operands [nodes]
+  (let [total (first nodes)
+        pairs (partition 2 (next nodes))]
+    (reduce (fn [sub [op n]] (op sub n)) total pairs)))
+
 (def transformations
   {:number (fn [value] (Double/parseDouble value))
    :parentheses second
-   :addition (fn [nodes]
-               (let [total (first nodes)
-                     pairs (partition 2 (next nodes))
-                     operation {\+ +, \- -}]
-                 (reduce (fn [sub [op n]]
-                           ((operation op) sub n))
-                         total
-                         pairs)))
-   :multiplication (fn [nodes]
-                     (let [total (first nodes)
-                           pairs (partition 2 (next nodes))
-                           operation {\* *, \/ /}]
-                       (reduce (fn [sub [op n]]
-                                 ((operation op) sub n))
-                               total
-                               pairs)))
-   :power (fn [nodes]
-            (let [nodes (reverse nodes)
-                  total (first nodes)
-                  pairs (partition 2 (next nodes))]
-              (reduce (fn [sub [op n]]
-                        (Math/pow n sub))
-                      total
-                      pairs)))})
+   :addition reduce-operands
+   :multiplication reduce-operands
+   :power (comp reduce-operands reverse)})
 
 (def pp (pp/compose grammar transformations))
 
