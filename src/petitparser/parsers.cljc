@@ -28,14 +28,25 @@
 (defrecord SequenceParser [parsers]
   Parser
   (parse-on [self stream]
-            (let [position (in/position stream)
-                  elements (map #(parse-on % stream)
-                              parsers)]
-              (if (every? success? elements)
-                (success (mapv actual-result elements))
-                (do
-                  (in/reset-position! stream position)
-                  (first (filter failure? elements)))))))
+            (let [start (in/position stream)
+                   elements (atom [])
+                   return (atom nil)]
+              (loop [parser (first parsers)
+                     rest (next parsers)]
+                (when parser
+                  (let [result (parse-on parser stream)]
+                    (if (success? result)
+                      (do
+                        (swap! elements conj (actual-result result))
+                        (recur
+                          (first rest)
+                          (next rest)))
+                      (do
+                        (in/reset-position! stream start)
+                        (reset! return result))))))
+              (if @return
+                @return
+                (success @elements)))))
 
 (defrecord ChoiceParser [parsers]
   Parser
