@@ -13,25 +13,19 @@
   {:start (pp/end :terms)
    :terms (pp/or :addition :factors)
    :factors (pp/or :multiplication :power)
-   :multiplication (pp/separated-by :power
-                                    (pp/transform (pp/trim (pp/or "*" "/")
-                                                           pp/space)
-                                                  operations))
-   :power (pp/separated-by :primary
-                           (pp/transform (pp/trim "^" pp/space)
-                                         operations))
+   :multiplication (pp/separated-by :power :multiplication-ops)
+   :multiplication-ops (pp/trim (pp/or "*" "/") pp/space)
+   :power (pp/separated-by :primary :power-ops)
+   :power-ops (pp/trim "^" pp/space)
    :primary (pp/or :number :parentheses)
    :parentheses [(pp/trim "(" pp/space)
                  :terms
                  (pp/trim ")" pp/space)]
-   :addition (pp/separated-by :factors
-                              (pp/transform (pp/trim (pp/or "+" "-")
-                                                     pp/space)
-                                            operations))
+   :addition (pp/separated-by :factors :addition-ops)
+   :addition-ops (pp/trim (pp/or "+" "-") pp/space)
    :number (pp/trim (pp/flatten [(pp/optional \-)
                                  (pp/plus pp/digit)
-                                 (pp/optional [\.
-                                               (pp/plus pp/digit)])])
+                                 (pp/optional [\. (pp/plus pp/digit)])])
                     pp/space)})
 
 (defn reduce-operands [nodes]
@@ -40,11 +34,14 @@
     (reduce (fn [sub [op n]] (op sub n)) total pairs)))
 
 (def transformations
-  {:number (fn [value] (Double/parseDouble value))
+  {:number (comp double read-string)
    :parentheses second
    :addition reduce-operands
    :multiplication reduce-operands
-   :power (comp reduce-operands reverse)})
+   :power (comp reduce-operands reverse)
+   :addition-ops operations
+   :multiplication-ops operations
+   :power-ops operations})
 
 (def pp (pp/compose grammar transformations))
 
