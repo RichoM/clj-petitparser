@@ -182,8 +182,8 @@
 
 (defn compose
   ([grammar] (compose grammar {}))
-  ([grammar transformations]
-
+  ([grammar transformations] (compose grammar transformations :start))
+  ([grammar transformations start]
    (let [; Change all keys to delegate parsers
          parser
          (into {}
@@ -214,7 +214,7 @@
                    (get actual-grammar key))))
 
      ; Return the composite parser
-     (petitparser.parsers.CompositeParser. parser))))
+     (petitparser.parsers.CompositeParser. parser (start parser)))))
 
 (def parse-on parsers/parse-on)
 
