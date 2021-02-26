@@ -312,12 +312,3 @@
     (is (pp/matches? pp "[id] ASC"))
     (is (pp/matches? pp "\n	[id] ASC, [model] desc"))
     (is (pp/matches? pp "[id]ASC,[model]desc"))))
-
-(comment
- (re-find #"Literal '\s' expected" "Literal 'a' expected")
- (re-find #"Literal '" "Literal 'a' expected")
- (= (seq [\a \b \c]) [\a \b \c])
- (str/index-of "Richo" \a)
- (read-string "42")
-
- ,)

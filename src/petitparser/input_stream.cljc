@@ -50,35 +50,3 @@
           (next! stream)
           (recur (inc n)))
         n))))
-
-(comment
- (apply str (seq [\a \a \a]))
- (def stream (make-stream "Richo capo!"))
-
- (def s (take-seq stream 30))
- (first s)
- (take-while! #(not= \" %) stream)
- (position stream)
- (= \" (peek stream))
- (reset-position! stream 0)
- (next! stream)
-
- (count-while! #(Character/isWhitespace %) stream)
- (count-while! #(Character/isLetter %) stream)
-
- (dotimes [n 15]
-          (println (next! stream)))
- (while (not (end? stream))
-   (println (next! stream)))
- (end? stream)
-
- (nth "richo" 10)
-
- (take-while! #(Character/isLetter %) stream)
- (def f (take-while! (fn [ch]
-                       (println ch)
-                       (Character/isLetter ch))
-                     stream))
- (take 50 f)
- (peek stream)
- ,)

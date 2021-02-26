@@ -223,14 +223,3 @@
 
 (defn matches? [parser src]
   (success? (parse-on parser (in/make-stream src))))
-
-(comment
-
- (def grammar
-   {:start :number
-    :number (trim (flatten [(optional \-)
-                            (plus digit)
-                            (optional [\.
-                                       (plus digit)])])
-                  space)})
- ,)
