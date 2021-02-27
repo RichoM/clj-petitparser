@@ -243,11 +243,18 @@
     (is (not (pp/matches? pp "2a")))))
 
 (deftest trimming-parser
-  (let [pp (pp/trim \+ pp/space)]
-    (is (= \+ (pp/parse pp "\t\n\r + \r\n\t")))
+  (let [pp (pp/trim \+ pp/digit)]
+    (is (= \+ (pp/parse pp "01234+56789")))
     (is (= \+ (pp/parse pp "+"))
     (is (thrown? clojure.lang.ExceptionInfo
-                 (pp/parse pp " . "))))))
+                 (pp/parse pp "1.1"))))))
+
+(deftest trimming-parser-2
+  (let [pp (pp/trim \+)]
+    (is (= \+ (pp/parse pp "\t\n\r + \r\n\t")))
+    (is (= \+ (pp/parse pp "+"))
+        (is (thrown? clojure.lang.ExceptionInfo
+                     (pp/parse pp " . "))))))
 
 (deftest greedy-repeating-parser-min
   (let [pp (pp/transform (pp/end [(pp/flatten (pp/min-greedy pp/any

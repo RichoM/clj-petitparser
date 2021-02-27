@@ -87,10 +87,6 @@
 (defn token [parser]
   (petitparser.parsers.TokenParser. (as-parser parser)))
 
-(defn trim [parser trimmer]
-  (petitparser.parsers.TrimmingParser. (as-parser parser)
-                                       (as-parser trimmer)))
-
 (defn transform [parser function]
   (petitparser.parsers.ActionParser. (as-parser parser) function))
 
@@ -107,6 +103,12 @@
 (def letter (predicate letter? "Letter expected"))
 (def word (predicate letter-or-digit? "Letter or digit expected"))
 (def space (predicate whitespace? "White space expected"))
+
+(defn trim
+  ([parser] (trim parser space))
+  ([parser trimmer]
+   (petitparser.parsers.TrimmingParser. (as-parser parser)
+                                        (as-parser trimmer))))
 
 (defn predicate-sequence [function message count]
   (petitparser.parsers.PredicateSequenceParser. function message count))
