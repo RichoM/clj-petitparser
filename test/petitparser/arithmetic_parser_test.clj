@@ -11,19 +11,18 @@
    :terms (pp/or :addition :factors)
    :factors (pp/or :multiplication :power)
    :multiplication (pp/separated-by :power :multiplication-ops)
-   :multiplication-ops (pp/trim (pp/or "*" "/") pp/space)
+   :multiplication-ops (pp/trim (pp/or "*" "/"))
    :power (pp/separated-by :primary :power-ops)
-   :power-ops (pp/trim "^" pp/space)
+   :power-ops (pp/trim "^")
    :primary (pp/or :number :parentheses)
-   :parentheses [(pp/trim "(" pp/space)
+   :parentheses [(pp/trim "(")
                  :terms
-                 (pp/trim ")" pp/space)]
+                 (pp/trim ")")]
    :addition (pp/separated-by :factors :addition-ops)
-   :addition-ops (pp/trim (pp/or "+" "-") pp/space)
+   :addition-ops (pp/trim (pp/or "+" "-"))
    :number (pp/trim (pp/flatten [(pp/optional \-)
                                  (pp/plus pp/digit)
-                                 (pp/optional [\. (pp/plus pp/digit)])])
-                    pp/space)})
+                                 (pp/optional [\. (pp/plus pp/digit)])]))})
 
 (def operations {"+" +, "-" -, "*" *, "/" /,
                  "^" (fn [a b] (Math/pow b a))})
