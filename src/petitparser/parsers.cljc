@@ -29,21 +29,21 @@
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
-                   elements (atom [])
-                   return (atom nil)]
+                   elements (volatile! [])
+                   return (volatile! nil)]
               (loop [parser (first parsers)
                      rest (next parsers)]
                 (when parser
                   (let [result (parse-on parser stream)]
                     (if (success? result)
                       (do
-                        (swap! elements conj (actual-result result))
+                        (vswap! elements conj (actual-result result))
                         (recur
                           (first rest)
                           (next rest)))
                       (do
                         (in/reset-position! stream start)
-                        (reset! return result))))))
+                        (vreset! return result))))))
               (if @return
                 @return
                 (success @elements)))))
@@ -99,25 +99,25 @@
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
-                   elements (atom [])
-                   failure (atom nil)]
+                   elements (volatile! [])
+                   failure (volatile! nil)]
               (loop [count 0]
                 (when (< count min)
                   (let [result (parse-on parser stream)]
                     (if (success? result)
                       (do
-                        (swap! elements conj (actual-result result))
+                        (vswap! elements conj (actual-result result))
                         (recur (inc count)))
                       (do
                         (in/reset-position! stream start)
-                        (reset! failure result))))))
+                        (vreset! failure result))))))
               (if @failure
                 @failure
                 (do (loop [count 0]
                       (when (< count max)
                         (let [result (parse-on parser stream)]
                           (when (success? result)
-                            (swap! elements conj (actual-result result))
+                            (vswap! elements conj (actual-result result))
                             (recur (inc count))))))
                   (success @elements))))))
 
@@ -125,27 +125,27 @@
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
-                  elements (atom [])
-                  return (atom nil)]
+                  elements (volatile! [])
+                  return (volatile! nil)]
               (loop [count 0]
                 (when (< count min)
                   (let [result (parse-on parser stream)]
                     (if (success? result)
                       (do
-                        (swap! elements conj (actual-result result))
+                        (vswap! elements conj (actual-result result))
                         (recur (inc count)))
                       (do
                         (in/reset-position! stream start)
-                        (reset! return result))))))
+                        (vreset! return result))))))
               (if @return
                 @return
-                (let [positions (atom [(in/position stream)])]
+                (let [positions (volatile! [(in/position stream)])]
                   (loop [count (clojure.core/count @elements)]
                     (when (< count max)
                       (let [result (parse-on parser stream)]
                         (when (success? result)
-                          (swap! elements conj (actual-result result))
-                          (swap! positions conj (in/position stream))
+                          (vswap! elements conj (actual-result result))
+                          (vswap! positions conj (in/position stream))
                           (recur (inc count))))))
                   (loop [count (clojure.core/count @positions)]
                     (when (> count 0)
@@ -154,14 +154,14 @@
                         (if (success? result)
                           (do
                             (in/reset-position! stream (last @positions))
-                            (reset! return (success @elements)))
+                            (vreset! return (success @elements)))
                           (if (empty? @elements)
                             (do
                               (in/reset-position! stream start)
-                              (reset! return result))
+                              (vreset! return result))
                             (do
-                              (swap! elements pop)
-                              (swap! positions pop)
+                              (vswap! elements pop)
+                              (vswap! positions pop)
                               (recur (dec count))))))))
                   (if @return
                     @return
@@ -171,8 +171,8 @@
   Parser
   (parse-on [self stream]
             (let [start (in/position stream)
-                   elements (atom [])
-                   return (atom nil)
+                   elements (volatile! [])
+                   return (volatile! nil)
                    matches-limit? #(let [start (in/position stream)
                                           result (parse-on limit stream)]
                                      (in/reset-position! stream start)
@@ -182,11 +182,11 @@
                   (let [result (parse-on parser stream)]
                     (if (success? result)
                       (do
-                        (swap! elements conj (actual-result result))
+                        (vswap! elements conj (actual-result result))
                         (recur (inc count)))
                       (do
                         (in/reset-position! stream start)
-                        (reset! return result))))))
+                        (vreset! return result))))))
               (if @return
                 @return
                 (do
@@ -195,14 +195,14 @@
                       (if (>= count max)
                         (do
                           (in/reset-position! stream start)
-                          (reset! return (failure start "Overflow")))
+                          (vreset! return (failure start "Overflow")))
                         (let [result (parse-on parser stream)]
                           (if (failure? result)
                             (do
                               (in/reset-position! stream start)
-                              (reset! return result))
+                              (vreset! return result))
                             (do
-                              (swap! elements conj (actual-result result))
+                              (vswap! elements conj (actual-result result))
                               (recur (inc count))))))))
                   (if @return
                     @return
