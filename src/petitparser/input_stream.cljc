@@ -22,13 +22,6 @@
 (defn end? [stream]
   (nil? (peek stream)))
 
-(defn take-seq [stream ^long count]
-  (lazy-seq
-   (if-not (or (= 0 count)
-               (end? stream))
-     (cons (next! stream)
-           (take-seq stream (dec count))))))
-
 (defn take! [stream ^long length]
   (let [start (position stream)
          end (min (count (:src stream))
