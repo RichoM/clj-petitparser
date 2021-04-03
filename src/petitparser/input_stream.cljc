@@ -29,5 +29,9 @@
      (cons (next! stream)
            (take-seq stream (dec count))))))
 
-(defn take! [stream count]
-  (apply str (take-seq stream count)))
+(defn take! [stream ^long length]
+  (let [start (position stream)
+         end (min (count (:src stream))
+                  (+ length start))]
+    (reset-position! stream end)
+    (subs (:src stream) start end)))
