@@ -165,16 +165,17 @@
 (defn separated-by [parser separator]
   (transform [parser (star [separator parser])]
              (fn [[f s]]
-               (let [result (atom [f])]
-                 (loop [[p0 p1] (first s)
-                        rest (next s)]
-                   (if p0
-                     (do
-                       (swap! result conj p0 p1)
-                       (recur
-                         (first rest)
-                         (next rest)))
-                     @result))))))
+               (loop [[p0 p1] (first s)
+                      rest (next s)
+                      result (transient [f])]
+                 (if p0
+                   (recur
+                     (first rest)
+                     (next rest)
+                     (-> result
+                         (conj! p0)
+                         (conj! p1)))
+                   (persistent! result))))))
 
 (defn- delegate []
   (petitparser.parsers.DelegateParser. (atom nil)))
