@@ -232,9 +232,7 @@
   (petitparser.parsers.DelegateParser. (atom nil)))
 
 (defn- resolve! [^petitparser.parsers.DelegateParser delegate parser]
-  (reset! #?(:clj (.parser delegate)
-            :cljs (.-parser delegate))
-          parser))
+  (reset! (:parser delegate) parser))
 
 (defn compose
   ([grammar] (compose grammar {}))
@@ -254,8 +252,7 @@
                                         (if (instance? petitparser.parsers.PlaceholderParser
                                                        each)
                                           (let [^petitparser.parsers.PlaceholderParser placeholder each
-                                                key #?(:clj (.key placeholder)
-                                                       :cljs (.-key placeholder))]
+                                                key (:key placeholder)]
                                             (clj/or (get parser key)
                                                     (throw (ex-info (str "Grammar not found for keyword " key)
                                                                     {:grammar grammar}))))
