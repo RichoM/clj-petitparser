@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [clojure.walk :as w]
             [petitparser.parsers :as parsers]
-            [petitparser.results :refer :all]
+            [petitparser.results :as r]
             [petitparser.input-stream :as in]
             [petitparser.token :as t]))
 
@@ -222,7 +222,7 @@
 (def parse-on parsers/parse-on)
 
 (defn parse [parser src]
-  (actual-result (parse-on parser (in/make-stream src))))
+  (r/actual-result (parse-on parser (in/make-stream src))))
 
 (defn matches? [parser src]
-  (success? (parse-on parser (in/make-stream src))))
+  (r/success? (parse-on parser (in/make-stream src))))
