@@ -1,10 +1,12 @@
 (ns petitparser.core-test
-  (:require [clojure.test :refer :all]
+  (:require #?(:clj [clojure.test :refer :all]
+               :cljs [cljs.test :refer-macros [deftest is testing]])
             [clojure.string :as str]
             [petitparser.core :as pp]
             [petitparser.input-stream :as in]
             [petitparser.token :as t]
-            [petitparser.results :as r]))
+            [petitparser.results :as r])
+  #?(:clj (:import [clojure.lang ExceptionInfo])))
 
 (deftest a-test
   (testing "FIXME, I fail."
@@ -13,21 +15,21 @@
 (deftest literal-object-parser
   (let [pp (pp/as-parser \a)]
     (is (= \a (pp/parse pp "a")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"Literal '\w' expected"
                           (pp/parse pp "b")))))
 
 (deftest literal-sequence-parser
   (let [pp (pp/as-parser "abc")]
     (is (= "abc" (pp/parse pp "abc")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"Literal '\w+' expected"
                           (pp/parse pp "abd")))))
 
 (deftest sequence-parser
   (let [pp (pp/as-parser [\a \b \c])]
     (is (= [\a \b \c] (pp/parse pp "abc")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"Literal '\w+' expected"
                           (pp/parse pp "abd")))))
 
@@ -35,7 +37,7 @@
   (let [pp (pp/or "perro"
                   "gato")]
     (is (= "perro" (pp/parse pp "perro")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"Literal '\w+' expected"
                           (pp/parse pp "ratón")))))
 
@@ -55,7 +57,7 @@
 (deftest end-parser
   (let [pp (pp/end "foo")]
     (is (= "foo" (pp/parse pp "foo")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"End of input expected"
                           (pp/parse pp "foobar")))))
 
@@ -67,14 +69,14 @@
 (deftest repeating-parser-plus
   (let [pp (pp/plus "foo")]
     (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"Literal '\w+' expected"
                           (pp/parse pp "bar")))))
 
 (deftest repeating-parser-times
   (let [pp (pp/times "foo" 3)]
     (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"Literal '\w+' expected"
                           (pp/parse pp "foofoo")))))
 
@@ -82,7 +84,7 @@
   (let [pp (pp/end (pp/min "foo" 3))]
     (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
     (is (= ["foo" "foo" "foo" "foo"] (pp/parse pp "foofoofoofoo")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"Literal '\w+' expected"
                           (pp/parse pp "foofoo")))))
 
@@ -90,14 +92,14 @@
   (let [pp (pp/end (pp/max "foo" 3))]
     (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
     (is (= ["foo" "foo"] (pp/parse pp "foofoo")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #"End of input expected"
                           (pp/parse pp "foofoofoofoo")))))
 
 (deftest not-parser
   (let [pp (pp/not \a)]
     (is (nil? (pp/parse pp "b")))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (is (thrown-with-msg? ExceptionInfo
                           #".+"
                           (pp/parse pp "a")))))
 
@@ -130,10 +132,11 @@
                           (pp/token "bar")
                           (pp/token "baz")]
                          (fn [[t1 t2 t3]]
-                           (format "%s -> %s -> %s"
-                                   (t/input-value t1)
-                                   (t/input-value t2)
-                                   (t/input-value t3))))]
+                           (str (t/input-value t1)
+                                " -> "
+                                (t/input-value t2)
+                                " -> "
+                                (t/input-value t3))))]
     (is (= "foo -> bar -> baz" (pp/parse pp "foobarbaz")))))
 
 (deftest predicate-parser
@@ -162,10 +165,12 @@
                            (pp/flatten (pp/plus pp/digit))
                            (pp/optional "!")]
                           (fn [[word _ num _]]
-                            [(str/lower-case word) (read-string num)])))]
+                            [(str/lower-case word)
+                             #?(:clj (read-string num)
+                                :cljs (js/parseFloat num))])))]
     (is (= ["foo" 4] (pp/parse pp "Foo 4!")))
     (is (= ["bar" 432] (pp/parse pp "BAR      432")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "Baz 56")))))
 
 (deftest greedy-repeating-parser-plus
@@ -181,7 +186,7 @@
                              "WAT")))]
     (is (= "abcupperlowerupper" (pp/parse pp "abcupperLowerUPPERlower")))
     (is (= "ABC" (pp/parse pp "abcupper")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "upper")))))
 
 (deftest greedy-repeating-parser-star
@@ -212,9 +217,9 @@
                              "WAT")))]
     (is (= " abc! " (pp/parse pp " abc! LOWER")))
     (is (= "ABC" (pp/parse pp "abcupper")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "upper")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "abcupperLOWER")))))
 
 (deftest lazy-repeating-parser-star
@@ -231,7 +236,7 @@
     (is (= " abc! " (pp/parse pp " abc! LOWER")))
     (is (= "ABC" (pp/parse pp "abcupper")))
     (is (= "" (pp/parse pp "upper")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "abcupperlower")))))
 
 (deftest negate-parser
@@ -246,14 +251,14 @@
   (let [pp (pp/trim \+ pp/digit)]
     (is (= \+ (pp/parse pp "01234+56789")))
     (is (= \+ (pp/parse pp "+"))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "1.1"))))))
 
 (deftest trimming-parser-2
   (let [pp (pp/trim \+)]
     (is (= \+ (pp/parse pp "\t\n\r + \r\n\t")))
     (is (= \+ (pp/parse pp "+"))
-        (is (thrown? clojure.lang.ExceptionInfo
+        (is (thrown? ExceptionInfo
                      (pp/parse pp " . "))))))
 
 (deftest greedy-repeating-parser-min
@@ -267,11 +272,11 @@
     (is (= "end" (pp/parse pp "endEND")))
     (is (= "abcend" (pp/parse pp "abcendEND")))
     (is (= "ENDabc" (pp/parse pp "ENDabcEND")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "abc")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "END")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "abend")))))
 
 (deftest greedy-repeating-parser-max
@@ -284,18 +289,18 @@
     (is (= "a" (pp/parse pp "aEND")))
     (is (= "" (pp/parse pp "END")))
     (is (= "end" (pp/parse pp "endEND")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "abcendEND")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "ENDabcEND")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "abc")))))
 
 (deftest separated-by
   (let [pp (pp/end (pp/separated-by pp/digit \,))]
     (is (= [\3 \, \4 \, \5]
            (pp/parse pp "3,4,5")))
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? ExceptionInfo
                  (pp/parse pp "3,4,5,")))))
 
 (deftest separated-by-2
