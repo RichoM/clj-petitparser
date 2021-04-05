@@ -1,5 +1,6 @@
 (ns petitparser.arithmetic-parser-test
-  (:require [clojure.test :refer :all]
+  (:require #?(:clj [clojure.test :refer :all]
+               :cljs [cljs.test :refer-macros [deftest is]])
             [clojure.string :as str]
             [petitparser.core :as pp]
             [petitparser.input-stream :as in]
@@ -33,7 +34,8 @@
     (reduce (fn [sub [op n]] (op sub n)) total pairs)))
 
 (def transformations
-  {:number (comp double read-string)
+  {:number #?(:clj (comp double read-string)
+              :cljs js/parseFloat)
    :parentheses second
    :addition reduce-operands
    :multiplication reduce-operands
