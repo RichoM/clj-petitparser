@@ -105,16 +105,16 @@
   (petitparser.parsers.PredicateObjectParser. function message))
 
 #?(:clj (defn- digit? [^Character chr] (Character/isDigit chr))
-   :cljs (defn- digit? [chr] false))
+   :cljs (defn- digit? [chr] (re-matches #"\d" chr)))
 
 #?(:clj (defn- letter? [^Character chr] (Character/isLetter chr))
-   :cljs (defn- letter? [chr] false))
+   :cljs (defn- letter? [chr] (re-matches #"\p{L}" chr)))
 
 #?(:clj (defn- letter-or-digit? [^Character chr] (Character/isLetterOrDigit chr))
-   :cljs (defn- letter-or-digit? [chr] false))
+   :cljs (defn- letter-or-digit? [chr] (re-matches #"\w" chr)))
 
 #?(:clj (defn- whitespace? [^Character chr] (Character/isWhitespace chr))
-   :cljs (defn- whitespace? [chr] false))
+   :cljs (defn- whitespace? [chr] (re-matches #"\s" chr)))
 
 (def any (predicate (constantly true) "Input expected"))
 (def digit (predicate digit? "Digit expected"))
