@@ -5,11 +5,17 @@
             :url "https://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.773"]]
+
   :plugins [[lein-cljsbuild "1.1.8"]]
-  :cljsbuild {:builds [{:source-paths ["src"]
-                        :compiler {:output-to "war/javascripts/main.js"  ; default: target/cljsbuild-main.js
-                                   :optimizations :whitespace
-                                   :pretty-print true}}]}
+  :cljsbuild {:builds {:dev {:source-paths ["src"]
+                             :compiler {:output-to "resources/private/js/main.js"
+                                        :optimizations :whitespace
+                                        :pretty-print true}}
+                       :test {:source-paths ["src" "test"]
+                              :compiler {:output-to "resources/private/js/test.js"
+                                         :optimizations :whitespace
+                                         :pretty-print true}}}}
+
   :profiles {:dev {:dependencies [[proto-repl "0.3.1"]
                                   [org.clojure/tools.cli "1.0.194"]
                                   [org.clojure/tools.namespace "0.3.1"]
