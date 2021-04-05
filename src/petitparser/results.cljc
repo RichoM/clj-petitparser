@@ -16,14 +16,11 @@
   (success? [_] false)
   (failure? [_] true)
   (actual-result [_]
-                 (throw (ex-info (format "%s at %d" message position)
+                 (throw (ex-info (str message " at " position)
                                  {:position position}))))
 
 (defn success [result]
   (ParseSuccess. result))
 
-(defn failure
-  ([position message & args]
-   (failure position (apply format message args)))
-  ([position message]
-   (ParseFailure. position message)))
+(defn failure [position message]
+  (ParseFailure. position message))

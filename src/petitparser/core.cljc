@@ -8,21 +8,32 @@
             [petitparser.input-stream :as in]
             [petitparser.token :as t]))
 
-(defmulti as-parser class)
+(def MAX_VALUE
+  #?(:clj Integer/MAX_VALUE
+     :cljs (.-MAX_SAFE_INTEGER js/Number)))
 
-(defmethod as-parser java.lang.Character [char]
-  (petitparser.parsers.LiteralObjectParser. char))
+#?(:clj (defmulti as-parser type))
 
-(defmethod as-parser java.lang.String [str]
-  (petitparser.parsers.LiteralSequenceParser. str (count str)))
+#?(:clj (defmethod as-parser java.lang.Character [char]
+          (petitparser.parsers.LiteralObjectParser. char)))
 
-(defmethod as-parser java.util.List [parsers]
-  (petitparser.parsers.SequenceParser. (mapv as-parser parsers)))
+#?(:clj (defmethod as-parser java.lang.String [str]
+          (petitparser.parsers.LiteralSequenceParser. str (count str))))
 
-(defmethod as-parser clojure.lang.Keyword [keyword]
-  (petitparser.parsers.PlaceholderParser. keyword))
+#?(:clj (defmethod as-parser java.util.List [parsers]
+          (petitparser.parsers.SequenceParser. (mapv as-parser parsers))))
 
-(defmethod as-parser petitparser.parsers.Parser [parser] parser)
+#?(:clj (defmethod as-parser clojure.lang.Keyword [keyword]
+          (petitparser.parsers.PlaceholderParser. keyword)))
+
+#?(:clj (defmethod as-parser petitparser.parsers.Parser [parser] parser))
+
+#?(:cljs (defn as-parser [obj]
+           (cond
+             (string? obj) (petitparser.parsers.LiteralSequenceParser. obj (count obj))
+             (keyword? obj) (petitparser.parsers.PlaceholderParser. obj)
+             (vector? obj) (petitparser.parsers.SequenceParser. (mapv as-parser obj))
+             (satisfies? petitparser.parsers/Parser obj) obj)))
 
 (defn seq [& parsers]
   (as-parser parsers))
@@ -40,40 +51,40 @@
   (petitparser.parsers.EndParser. (as-parser parser)))
 
 (defn star [parser]
-  (petitparser.parsers.RepeatingParser. (as-parser parser) 0 Integer/MAX_VALUE))
+  (petitparser.parsers.RepeatingParser. (as-parser parser) 0 MAX_VALUE))
 
 (defn plus [parser]
-  (petitparser.parsers.RepeatingParser. (as-parser parser) 1 Integer/MAX_VALUE))
+  (petitparser.parsers.RepeatingParser. (as-parser parser) 1 MAX_VALUE))
 
 (defn times [parser n]
   (petitparser.parsers.RepeatingParser. (as-parser parser) n n))
 
 (defn min [parser n]
-  (petitparser.parsers.RepeatingParser. (as-parser parser) n Integer/MAX_VALUE))
+  (petitparser.parsers.RepeatingParser. (as-parser parser) n MAX_VALUE))
 
 (defn max [parser n]
   (petitparser.parsers.RepeatingParser. (as-parser parser) 0 n))
 
 (defn plus-greedy [parser limit]
-  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 1 Integer/MAX_VALUE (as-parser limit)))
+  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 1 MAX_VALUE (as-parser limit)))
 
 (defn star-greedy [parser limit]
-  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 0 Integer/MAX_VALUE (as-parser limit)))
+  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 0 MAX_VALUE (as-parser limit)))
 
 (defn plus-lazy [parser limit]
-  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) 1 Integer/MAX_VALUE (as-parser limit)))
+  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) 1 MAX_VALUE (as-parser limit)))
 
 (defn star-lazy [parser limit]
-  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) 0 Integer/MAX_VALUE (as-parser limit)))
+  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) 0 MAX_VALUE (as-parser limit)))
 
 (defn min-greedy [parser min limit]
-  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) min Integer/MAX_VALUE (as-parser limit)))
+  (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) min MAX_VALUE (as-parser limit)))
 
 (defn max-greedy [parser max limit]
   (petitparser.parsers.GreedyRepeatingParser. (as-parser parser) 0 max (as-parser limit)))
 
 (defn min-lazy [parser min limit]
-  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) min Integer/MAX_VALUE (as-parser limit)))
+  (petitparser.parsers.LazyRepeatingParser. (as-parser parser) min MAX_VALUE (as-parser limit)))
 
 (defn max-lazy [parser max limit]
   (petitparser.parsers.LazyRepeatingParser. (as-parser parser) 0 max (as-parser limit)))
@@ -93,10 +104,17 @@
 (defn predicate [function message]
   (petitparser.parsers.PredicateObjectParser. function message))
 
-(defn- digit? [^Character chr] (Character/isDigit chr))
-(defn- letter? [^Character chr] (Character/isLetter chr))
-(defn- letter-or-digit? [^Character chr] (Character/isLetterOrDigit chr))
-(defn- whitespace? [^Character chr] (Character/isWhitespace chr))
+#?(:clj (defn- digit? [^Character chr] (Character/isDigit chr))
+   :cljs (defn- digit? [chr] false))
+
+#?(:clj (defn- letter? [^Character chr] (Character/isLetter chr))
+   :cljs (defn- letter? [chr] false))
+
+#?(:clj (defn- letter-or-digit? [^Character chr] (Character/isLetterOrDigit chr))
+   :cljs (defn- letter-or-digit? [chr] false))
+
+#?(:clj (defn- whitespace? [^Character chr] (Character/isWhitespace chr))
+   :cljs (defn- whitespace? [chr] false))
 
 (def any (predicate (constantly true) "Input expected"))
 (def digit (predicate digit? "Digit expected"))
@@ -113,50 +131,83 @@
 (defn predicate-sequence [function message count]
   (petitparser.parsers.PredicateSequenceParser. function message count))
 
-(defmulti case-insensitive class)
+#?(:clj (defmulti case-insensitive type))
 
-(defmethod case-insensitive
-  petitparser.parsers.LiteralObjectParser
-  [^petitparser.parsers.LiteralObjectParser parser]
-  (let [literal (.literal parser)]
-    (if (= (str/upper-case literal)
-           (str/lower-case literal))
-      parser
-      (let [lower (str/lower-case literal)]
-        (predicate (fn [char] (= lower (str/lower-case char)))
-                   (str "Literal '" lower "' expected"))))))
+#?(:clj (defmethod case-insensitive
+          petitparser.parsers.LiteralObjectParser
+          [^petitparser.parsers.LiteralObjectParser parser]
+          (let [literal (.literal parser)]
+            (if (= (str/upper-case literal)
+                   (str/lower-case literal))
+              parser
+              (let [lower (str/lower-case literal)]
+                (predicate (fn [char] (= lower (str/lower-case char)))
+                           (str "Literal '" lower "' expected")))))))
 
-(defmethod case-insensitive
-  petitparser.parsers.LiteralSequenceParser
-  [^petitparser.parsers.LiteralSequenceParser parser]
-  (let [literal (.literal parser)]
-    (if (= (str/upper-case literal)
-           (str/lower-case literal))
-      parser
-      (let [lower (str/lower-case literal)]
-        (predicate-sequence
-         (fn [str] (= lower (str/lower-case str)))
-         (str "Literal '" lower "' expected")
-         (count lower))))))
+#?(:clj (defmethod case-insensitive
+          petitparser.parsers.LiteralSequenceParser
+          [^petitparser.parsers.LiteralSequenceParser parser]
+          (let [literal (.literal parser)]
+            (if (= (str/upper-case literal)
+                   (str/lower-case literal))
+              parser
+              (let [lower (str/lower-case literal)]
+                (predicate-sequence
+                 (fn [str] (= lower (str/lower-case str)))
+                 (str "Literal '" lower "' expected")
+                 (count lower)))))))
 
-(defmethod case-insensitive
-  petitparser.parsers.Parser
-  [parser]
-  (w/prewalk (fn [each]
-               (if (clj/or (instance? petitparser.parsers.LiteralSequenceParser each)
-                           (instance? petitparser.parsers.LiteralObjectParser each))
-                 (case-insensitive each)
-                 each))
-             parser))
+#?(:clj (defmethod case-insensitive
+          petitparser.parsers.Parser
+          [parser]
+          (w/prewalk (fn [each]
+                       (if (clj/or (instance? petitparser.parsers.LiteralSequenceParser each)
+                                   (instance? petitparser.parsers.LiteralObjectParser each))
+                         (case-insensitive each)
+                         each))
+                     parser)))
 
-(defmethod case-insensitive java.lang.Character [char]
-  (case-insensitive (as-parser char)))
+#?(:clj (defmethod case-insensitive java.lang.Character [char]
+          (case-insensitive (as-parser char))))
 
-(defmethod case-insensitive java.lang.String [str]
-  (case-insensitive (as-parser str)))
+#?(:clj (defmethod case-insensitive java.lang.String [str]
+          (case-insensitive (as-parser str))))
 
-(defmethod case-insensitive :default [obj]
-  (case-insensitive (as-parser obj)))
+#?(:clj (defmethod case-insensitive :default [obj]
+        (case-insensitive (as-parser obj))))
+
+#?(:cljs (defn case-insensitive [parser]
+           (cond
+             (instance? petitparser.parsers.LiteralObjectParser parser)
+             (let [literal (.-literal parser)]
+               (if (= (str/upper-case literal)
+                      (str/lower-case literal))
+                 parser
+                 (let [lower (str/lower-case literal)]
+                   (predicate (fn [char] (= lower (str/lower-case char)))
+                              (str "Literal '" lower "' expected")))))
+
+             (instance? petitparser.parsers.LiteralSequenceParser parser)
+             (let [literal (.-literal parser)]
+               (if (= (str/upper-case literal)
+                      (str/lower-case literal))
+                 parser
+                 (let [lower (str/lower-case literal)]
+                   (predicate-sequence
+                    (fn [str] (= lower (str/lower-case str)))
+                    (str "Literal '" lower "' expected")
+                    (count lower)))))
+
+             (satisfies? petitparser.parsers/Parser parser)
+             (w/prewalk (fn [each]
+                          (if (clj/or (instance? petitparser.parsers.LiteralSequenceParser each)
+                                      (instance? petitparser.parsers.LiteralObjectParser each))
+                            (case-insensitive each)
+                            each))
+                        parser)
+            
+             :else (case-insensitive (as-parser parser)))))
+
 
 (defn negate [parser]
   (transform [(not parser) any]
@@ -181,7 +232,9 @@
   (petitparser.parsers.DelegateParser. (atom nil)))
 
 (defn- resolve! [^petitparser.parsers.DelegateParser delegate parser]
-  (reset! (.parser delegate) parser))
+  (reset! #?(:clj (.parser delegate)
+            :cljs (.-parser delegate))
+          parser))
 
 (defn compose
   ([grammar] (compose grammar {}))
@@ -201,9 +254,10 @@
                                         (if (instance? petitparser.parsers.PlaceholderParser
                                                        each)
                                           (let [^petitparser.parsers.PlaceholderParser placeholder each
-                                                key (.key placeholder)]
+                                                key #?(:clj (.key placeholder)
+                                                       :cljs (.-key placeholder))]
                                             (clj/or (get parser key)
-                                                    (throw (ex-info (format "Grammar not found for keyword %s" key)
+                                                    (throw (ex-info (str "Grammar not found for keyword " key)
                                                                     {:grammar grammar}))))
                                           each))
                                       (as-parser val))])

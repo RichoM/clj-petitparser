@@ -289,7 +289,7 @@
   Parser
   (parse-on [self stream]
             (r/failure (in/position stream)
-                       (format "Parser not found for keyword %s" key))))
+                       (str "Parser not found for keyword " key))))
 
 (defrecord DelegateParser [parser]
   Parser
