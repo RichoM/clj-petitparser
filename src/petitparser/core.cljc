@@ -36,7 +36,7 @@
              (satisfies? petitparser.parsers/Parser obj) obj)))
 
 (defn seq [& parsers]
-  (as-parser parsers))
+  (as-parser (vec parsers)))
 
 (defn or [& parsers]
   (petitparser.parsers.ChoiceParser. (mapv as-parser parsers)))
@@ -205,7 +205,7 @@
                             (case-insensitive each)
                             each))
                         parser)
-            
+
              :else (case-insensitive (as-parser parser)))))
 
 
