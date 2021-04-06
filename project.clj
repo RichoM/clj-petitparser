@@ -3,8 +3,8 @@
   :url "https://github.com/RichoM/clj-petitparser"
   :license {:name "MIT License"
             :url "https://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.773"]]
+  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
+                 [org.clojure/clojurescript "1.10.773" :scope "provided"]]
 
   :plugins [[lein-cljsbuild "1.1.8"]]
   :cljsbuild {:builds {:dev {:source-paths ["src"]
