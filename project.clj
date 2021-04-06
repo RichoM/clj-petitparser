@@ -1,4 +1,4 @@
-(defproject clj-petitparser "0.1.1"
+(defproject clj-petitparser "0.1.2-SNAPSHOT"
   :description "Clojure port of Lukas Renggli's PetitParser"
   :url "https://github.com/RichoM/clj-petitparser"
   :license {:name "MIT License"
