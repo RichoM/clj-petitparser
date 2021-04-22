@@ -104,17 +104,35 @@
 (defn predicate [function message]
   (petitparser.parsers.PredicateObjectParser. function message))
 
-#?(:clj (defn- digit? [^Character chr] (Character/isDigit chr))
-   :cljs (defn- digit? [chr] (re-matches #"\d" chr)))
+#?(:clj (defn digit? [^Character chr] (Character/isDigit chr))
+   :cljs (defn digit? [chr] (re-matches #"\d" chr)))
 
-#?(:clj (defn- letter? [^Character chr] (Character/isLetter chr))
-   :cljs (defn- letter? [chr] (re-matches #"\p{L}" chr)))
+#?(:clj (defn letter? [^Character chr] (Character/isLetter chr))
+   :cljs (defn letter? [chr] (re-matches #"\p{L}" chr)))
 
-#?(:clj (defn- letter-or-digit? [^Character chr] (Character/isLetterOrDigit chr))
-   :cljs (defn- letter-or-digit? [chr] (re-matches #"\w" chr)))
+#?(:clj (defn letter-or-digit? [^Character chr] (Character/isLetterOrDigit chr))
+   :cljs (defn letter-or-digit? [chr] (re-matches #"\w" chr)))
 
-#?(:clj (defn- whitespace? [^Character chr] (Character/isWhitespace chr))
-   :cljs (defn- whitespace? [chr] (re-matches #"\s" chr)))
+#?(:clj (defn whitespace? [^Character chr] (Character/isWhitespace chr))
+   :cljs (defn whitespace? [chr] (re-matches #"\s" chr)))
+
+(comment
+(defn- digit? [chr] (re-matches #"\p{N}" (str chr)))
+(defn- letter? [chr] (re-matches #"\p{L}" (str chr)))
+(defn- letter-or-digit? [chr] (re-matches #"\p{Nl}" (str chr)))
+(defn- whitespace? [chr] (re-matches #"\s" (str chr)))
+
+(time (dotimes [_ 1000000] (digit? \1)))
+(Character/isDigit \u0660)
+(letter-or-digit? \u0660)
+\u001C
+(Double/parseDouble (str \1))
+
+
+
+(set! *print-length* 100)
+
+)
 
 (def any (predicate (constantly true) "Input expected"))
 (def digit (predicate digit? "Digit expected"))
