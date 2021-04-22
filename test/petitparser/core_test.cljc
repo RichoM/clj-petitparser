@@ -324,3 +324,35 @@
     (is (pp/matches? pp "[id] ASC"))
     (is (pp/matches? pp "\n	[id] ASC, [model] desc"))
     (is (pp/matches? pp "[id]ASC,[model]desc"))))
+
+(def code-points (mapv (fn [line] (mapv read-string (str/split line #",")))
+                       (drop 1 (str/split-lines (slurp "chars.csv")))))
+
+(defn java-digit? [cp] (first (nth code-points cp)))
+(defn java-letter? [cp] (second (nth code-points cp)))
+(defn java-whitespace? [cp] (nth (nth code-points cp) 2))
+
+(deftest digit?-predicate
+  (let [errors (remove #(= (java-digit? %)
+                           (pp/digit? (char %)))
+                       (range 0 (count code-points)))]
+    (is (empty? errors))))
+
+(deftest letter?-predicate
+  (let [errors (remove #(= (java-letter? %)
+                           (pp/letter? (char %)))
+                       (range 0 (count code-points)))]
+    (is (empty? errors))))
+
+(deftest whitespace?-predicate
+  (let [errors (remove #(= (java-whitespace? %)
+                           (pp/whitespace? (char %)))
+                       (range 0 (count code-points)))]
+    (is (empty? errors))))
+
+(deftest letter-or-digit?-predicate
+  (let [errors (remove #(= (or (java-letter? %)
+                               (java-digit? %))
+                           (pp/letter-or-digit? (char %)))
+                       (range 0 (count code-points)))]
+    (is (empty? errors))))
