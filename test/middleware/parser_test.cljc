@@ -1,5 +1,6 @@
 (ns middleware.parser-test
-  (:require [clojure.test :refer :all]
+  (:require #?(:clj [clojure.test :refer :all]
+               :cljs [cljs.test :refer-macros [deftest is testing]])
             [clojure.data :as data]
             [middleware.parser.parser :as pp]
             [middleware.parser.ast-nodes :as ast]))

@@ -11,8 +11,11 @@
  (crit/with-progress-reporting (crit/bench (parse "task blink13() running 1/s { toggle(D13); }") :verbose))
  ,)
 
-(defn- parse-int [str] (Integer/parseInt str))
-(defn- parse-double [str] (Double/parseDouble str))
+ (defn- parse-int [str] #?(:clj (Integer/parseInt str)
+                           :cljs (js/parseInt str)))
+
+ (defn- parse-double [str] #?(:clj (Double/parseDouble str)
+                              :cljs (js/parseFloat str)))
 
 ; TODO(Richo): This should probably be in a utils.ast namespace
 (defn- script? [node]
