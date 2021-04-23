@@ -1,6 +1,7 @@
 (ns petitparser.core-test
   (:require #?(:clj [clojure.test :refer :all]
                :cljs [cljs.test :refer-macros [deftest is testing]])
+            [clojure.set :refer [union]]
             [clojure.string :as str]
             [petitparser.core :as pp]
             [petitparser.input-stream :as in]
@@ -328,7 +329,7 @@
 
 (def digits (set "0123456789"))
 (def letters (set "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóúÁÉÍÓÚ"))
-(def letters-and-digits (clojure.set/union digits letters))
+(def letters-and-digits (union digits letters))
 (def whitespaces (set " \t\r\n"))
 
 (deftest digit?-predicate
