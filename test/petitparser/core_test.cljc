@@ -325,34 +325,24 @@
     (is (pp/matches? pp "\n	[id] ASC, [model] desc"))
     (is (pp/matches? pp "[id]ASC,[model]desc"))))
 
-(def code-points (mapv (fn [line] (mapv read-string (str/split line #",")))
-                       (drop 1 (str/split-lines (slurp "chars.csv")))))
 
-(defn java-digit? [cp] (first (nth code-points cp)))
-(defn java-letter? [cp] (second (nth code-points cp)))
-(defn java-whitespace? [cp] (nth (nth code-points cp) 2))
+(def digits (set "0123456789"))
+(def letters (set "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóúÁÉÍÓÚ"))
+(def letters-and-digits (clojure.set/union digits letters))
+(def whitespaces (set " \t\r\n"))
 
 (deftest digit?-predicate
-  (let [errors (remove #(= (java-digit? %)
-                           (pp/digit? (char %)))
-                       (range 0 (count code-points)))]
+  (let [errors (remove pp/digit? digits)]
     (is (empty? errors))))
 
 (deftest letter?-predicate
-  (let [errors (remove #(= (java-letter? %)
-                           (pp/letter? (char %)))
-                       (range 0 (count code-points)))]
+  (let [errors (remove pp/letter? letters)]
     (is (empty? errors))))
 
 (deftest whitespace?-predicate
-  (let [errors (remove #(= (java-whitespace? %)
-                           (pp/whitespace? (char %)))
-                       (range 0 (count code-points)))]
+  (let [errors (remove pp/whitespace? whitespaces)]
     (is (empty? errors))))
 
 (deftest letter-or-digit?-predicate
-  (let [errors (remove #(= (or (java-letter? %)
-                               (java-digit? %))
-                           (pp/letter-or-digit? (char %)))
-                       (range 0 (count code-points)))]
+  (let [errors (remove pp/letter-or-digit? letters-and-digits)]
     (is (empty? errors))))

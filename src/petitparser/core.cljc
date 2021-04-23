@@ -104,6 +104,7 @@
 (defn predicate [function message]
   (petitparser.parsers.PredicateObjectParser. function message))
 
+(comment
 #?(:clj (defn digit? [^Character chr] (Character/isDigit chr))
    :cljs (defn digit? [chr] (re-matches #"\d" chr)))
 
@@ -115,12 +116,19 @@
 
 #?(:clj (defn whitespace? [^Character chr] (Character/isWhitespace chr))
    :cljs (defn whitespace? [chr] (re-matches #"\s" chr)))
+)
+
+(def digit? (memoize #(re-matches #"[0-9]" (str %))))
+(def letter? (memoize #(re-matches #"[a-zA-ZáéíóúñÁÉÍÓÚÑ]" (str %))))
+(def letter-or-digit? (memoize #(re-matches #"[0-9a-zA-ZáéíóúñÁÉÍÓÚÑ]" (str %))))
+(def whitespace? (memoize #(re-matches #"\s" (str %))))
 
 (comment
 (defn- digit? [chr] (re-matches #"\p{N}" (str chr)))
 (defn- letter? [chr] (re-matches #"\p{L}" (str chr)))
 (defn- letter-or-digit? [chr] (re-matches #"\p{Nl}" (str chr)))
 (defn- whitespace? [chr] (re-matches #"\s" (str chr)))
+ (int \9)
 
 (time (dotimes [_ 1000000] (digit? \1)))
 (Character/isDigit \u0660)
@@ -128,7 +136,7 @@
 \u001C
 (Double/parseDouble (str \1))
 
-
+(digit? \1)
 
 (set! *print-length* 100)
 
