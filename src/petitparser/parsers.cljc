@@ -113,7 +113,7 @@
                         (vreset! failure result))))))
               (if @failure
                 @failure
-                (do (loop [count 0]
+                (do (loop [count min]
                       (when (< count max)
                         (let [result (parse-on parser stream)]
                           (when (r/success? result)
