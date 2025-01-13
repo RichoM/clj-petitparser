@@ -81,6 +81,18 @@
                           #"Literal '\w+' expected"
                           (pp/parse pp "foofoo")))))
 
+(deftest repeating-parser-times-between
+  (let [pp (pp/end (pp/times "foo" 3 6))]
+    (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
+    (is (= ["foo" "foo" "foo"
+            "foo" "foo" "foo"] (pp/parse pp "foofoofoofoofoofoo")))
+    (is (thrown-with-msg? ExceptionInfo
+                          #"Literal '\w+' expected"
+                          (pp/parse pp "foofoo")))
+    (is (thrown-with-msg? ExceptionInfo
+                          #"End of input expected"
+                          (pp/parse pp "foofoofoofoofoofoofoo")))))
+
 (deftest repeating-parser-min
   (let [pp (pp/end (pp/min "foo" 3))]
     (is (= ["foo" "foo" "foo"] (pp/parse pp "foofoofoo")))
