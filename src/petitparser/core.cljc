@@ -56,8 +56,11 @@
 (defn plus [parser]
   (petitparser.parsers.RepeatingParser. (as-parser parser) 1 MAX_VALUE))
 
-(defn times [parser n]
-  (petitparser.parsers.RepeatingParser. (as-parser parser) n n))
+(defn times 
+  ([parser n]
+  (times parser n n))
+  ([parser min max]
+   (petitparser.parsers.RepeatingParser. (as-parser parser) min max)))
 
 (defn min [parser n]
   (petitparser.parsers.RepeatingParser. (as-parser parser) n MAX_VALUE))
